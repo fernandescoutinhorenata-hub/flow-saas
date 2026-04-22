@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import TaskCard from './TaskCard.jsx';
 
-export default function Column({ col, tasks, onCardClick, dragState, onDragStart, onDragEnd, onDrop, onDragOver, isAdmin, onRename, onRemove }) {
+export default function Column({ col, tasks, onCardClick, dragState, onDragStart, onDragEnd, onDrop, onDragOver, onAccept, isAdmin, onRename, onRemove }) {
   const [isOver, setIsOver] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newLabel, setNewLabel] = useState(col.label);
@@ -86,6 +86,7 @@ export default function Column({ col, tasks, onCardClick, dragState, onDragStart
               isDragging={dragState.dragId === task.id}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
+              onAccept={onAccept}
               animDelay={`${i * 50}ms`}
             />
           ))}

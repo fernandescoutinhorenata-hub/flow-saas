@@ -1,4 +1,5 @@
 import { TODAY } from './data.js';
+export { TODAY };
 
 export function formatDue(dateStr) {
   const d = new Date(dateStr + "T00:00:00");

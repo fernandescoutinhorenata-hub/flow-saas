@@ -9,13 +9,14 @@ import Toast from './components/Toast.jsx';
 import Avatar from './components/Avatar.jsx';
 import { INITIAL_TASKS, COLUMNS, INITIAL_TICKETS, PERMISSIONS } from './data.js';
 import { isOverdue, newId, timeAgo } from './utils.js';
-import Registros from './components/Registros.jsx';
-import Dashboard from './components/Dashboard.jsx';
-import Timeline from './components/Timeline.jsx';
-import Reports from './components/Reports.jsx';
-import Settings from './components/Settings.jsx';
-import NewColumnButton from './components/NewColumnButton.jsx';
-
+import Registros from './views/Registros.jsx';
+import Dashboard from './views/Dashboard.jsx';
+import Timeline from './views/Timeline.jsx';
+import Reports from './views/Reports.jsx';
+import Settings from './views/Settings.jsx';
+import NewColumnButton from './components/NewColumnGhost.jsx';
+import RoleSelector from './components/RoleSelector.jsx';
+import { useAuth } from './context/AuthContext.jsx';
 export default function App() {
   const [screen, setScreen] = useState("login");
   const [tasks, setTasks] = useState(INITIAL_TASKS);
@@ -31,12 +32,7 @@ export default function App() {
   const [registros, setRegistros] = useState(INITIAL_TICKETS);
   const toastTimer = useRef({});
 
-  const currentUser = { id: "u5", name: "Você", initials: "VC", role: "admin", email: "admin@flow.com" };
-
-  const hasPermission = (action) => {
-    const userPermissions = PERMISSIONS[currentUser.role] || [];
-    return userPermissions.includes(action);
-  };
+  const { currentUser, hasPermission } = useAuth();
 
   function addToast(message) {
     const id = Date.now();
@@ -119,21 +115,44 @@ export default function App() {
     addToast("Tarefa excluída.");
   }
 
-  function handleCreateTask(data) {
+  function handleCreateTask({ title, priority, due, status }) {
     const newTask = {
       id: newId(),
-      title: data.title,
-      priority: data.priority,
-      assignee: "Você",
-      assigneeInitials: "VC",
-      due: data.due,
+      title,
+      priority,
+      due,
+      status,
+      assignee: null,
+      assigneeInitials: null,
       subtasks: { done: 0, total: 0 },
-      status: data.status,
       tags: [],
+      description: "",
     };
     setTasks(prev => [...prev, newTask]);
     setShowNewTask(false);
-    addToast("Nova tarefa criada.");
+    addToast(`✅ Tarefa "${title}" criada!`);
+  }
+
+  function handleAcceptTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    if (currentUser.role === "membro" && task.assignee) {
+      addToast("Esta tarefa já possui um responsável.");
+      return;
+    }
+
+    const updatedTasks = tasks.map(t => t.id === id ? {
+      ...t,
+      assignee: currentUser.name === "Você" ? "Você" : currentUser.name,
+      assigneeInitials: currentUser.initials
+    } : t);
+    
+    setTasks(updatedTasks);
+    if (activeModal && activeModal.id === id) {
+      setActiveModal({ ...activeModal, assignee: currentUser.name, assigneeInitials: currentUser.initials });
+    }
+    addToast("✅ Tarefa aceita com sucesso!");
   }
 
   function handleCreateTicket(data) {
@@ -243,7 +262,7 @@ export default function App() {
           <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nova Tarefa
         </button>
 
-        <Avatar initials="VC" size={32} />
+        <Avatar initials={currentUser.initials} size={32} roleBadge={currentUser.role} />
       </header>
 
       {/* Body */}
@@ -267,6 +286,7 @@ export default function App() {
                 onDragEnd={handleDragEnd}
                 onDrop={handleDrop}
                 onDragOver={colId => setDragState(prev => ({ ...prev, overCol: colId }))}
+                onAccept={handleAcceptTask}
                 isAdmin={currentUser.role === "admin"}
                 onRename={handleRenameColumn}
                 onRemove={(id) => {
@@ -337,6 +357,7 @@ export default function App() {
           onClose={() => setActiveModal(null)}
           onSave={handleSaveTask}
           onDelete={handleDeleteTask}
+          onAccept={handleAcceptTask}
         />
       )}
       {showNewTask && (
@@ -348,6 +369,9 @@ export default function App() {
 
       {/* Tweaks */}
       <TweaksPanel />
+
+      {/* Role Selector (Dev Only) */}
+      <RoleSelector />
 
       {/* Toasts */}
       <Toast toasts={toasts} />

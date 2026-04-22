@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Avatar from './Avatar.jsx';
+import Avatar from '../components/Avatar.jsx';
 
 export default function Timeline() {
   const [period, setPeriod] = useState("week");

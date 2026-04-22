@@ -27,8 +27,29 @@ export const INITIAL_TICKETS = [
   { id: 3, type: "sugestao", title: "Adicionar filtro por data no Kanban", description: "Seria útil poder filtrar as tarefas por período de prazo.", authorId: "u4", author: "João P.", authorInitials: "JP", taskId: null, taskTitle: null, status: "aberto", priority: "normal", createdAt: "2025-06-06T09:00:00", responses: [] },
 ];
 
+export const TICKET_TYPES = {
+  duvida:     { label: "Dúvida",     color: "#00FF87" },
+  observacao: { label: "Observação", color: "#7A7A7A" },
+  problema:   { label: "Problema",   color: "#FF4C4C" },
+  sugestao:   { label: "Sugestão",   color: "#FFB800" },
+};
+
+export const TICKET_STATUS = {
+  aberto:     { label: "Aberto",     bg: "#00FF8720", text: "#00FF87" },
+  em_analise: { label: "Em Análise", bg: "#FFB80020", text: "#FFB800" },
+  resolvido:  { label: "Resolvido",  bg: "#3A3A3A",   text: "#7A7A7A" },
+};
+
+export const USERS = [
+  { id: "u1", name: "Ana S.",    initials: "AS", role: "admin",  email: "ana@flow.com" },
+  { id: "u2", name: "Lucas M.",  initials: "LM", role: "gestor", email: "lucas@flow.com" },
+  { id: "u3", name: "Carla T.",  initials: "CT", role: "membro", email: "carla@flow.com" },
+  { id: "u4", name: "João P.",   initials: "JP", role: "membro", email: "joao@flow.com" },
+  { id: "u5", name: "Você",      initials: "VC", role: "admin",  email: "voce@flow.com" },
+];
+
 export const PERMISSIONS = {
-  admin:  ["view_dashboard", "view_reports", "manage_members", "edit_all", "delete_all"],
-  gestor: ["view_dashboard", "view_reports", "edit_all"],
-  membro: []
+  admin:  ["view_all_tasks", "edit_any_task", "delete_task", "manage_members", "view_reports", "view_dashboard", "create_task", "invite_members"],
+  gestor: ["view_all_tasks", "edit_any_task", "view_reports", "view_dashboard", "create_task"],
+  membro: ["edit_own_task"],
 };

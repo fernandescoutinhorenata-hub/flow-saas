@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Avatar from './Avatar.jsx';
 import { PRIORITY_COLORS, PRIORITY_LABELS, COLUMNS } from '../data.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskModal({ task, onClose, onSave, onDelete }) {
+export default function TaskModal({ task, onClose, onSave, onDelete, onAccept }) {
+  const { currentUser, hasPermission } = useAuth();
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
   const [desc, setDesc] = useState(task.description || "");
@@ -13,16 +15,24 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
   const [due, setDue] = useState(task.due);
   const titleRef = useRef();
 
+  const isAvailable = !task.assignee;
+  const isOwner = task.assigneeInitials === currentUser.initials;
+  
+  const canEdit = !isAvailable && (hasPermission("edit_any_task") || (isOwner && currentUser.role === "membro"));
+  const showDelete = !isAvailable && (hasPermission("delete_task") || (isOwner && currentUser.role === "gestor"));
+
   useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
 
   const doneSub = subtasks.filter(s => s.done).length;
   const progPct = subtasks.length > 0 ? (doneSub / subtasks.length) * 100 : 0;
 
   function toggleSub(id) {
+    if (!canEdit) return;
     setSubtasks(prev => prev.map(s => s.id === id ? { ...s, done: !s.done } : s));
   }
 
   function handleSave() {
+    if (!canEdit) return;
     onSave({ ...task, title, description: desc, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
   }
 
@@ -33,7 +43,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
   ];
 
   const activityLog = [
-    { text: `${task.assignee} adicionou esta tarefa`, time: "há 3 dias" },
+    { text: `${task.assignee || 'Sistema'} adicionou esta tarefa`, time: "há 3 dias" },
     { text: "Status alterado para Em Andamento", time: "há 1 dia" },
     { text: "Prazo atualizado", time: "há 2h" },
   ];
@@ -60,7 +70,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
         {/* Modal header */}
         <div style={{ padding: "24px 28px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ flex: 1 }}>
-            {editingTitle ? (
+            {editingTitle && canEdit ? (
               <input
                 ref={titleRef}
                 value={title}
@@ -76,11 +86,11 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
               />
             ) : (
               <h2
-                onClick={() => setEditingTitle(true)}
-                title="Clique para editar"
+                onClick={() => canEdit && setEditingTitle(true)}
+                title={canEdit ? "Clique para editar" : ""}
                 style={{
                   fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 20,
-                  color: "var(--text-primary)", cursor: "text", lineHeight: 1.3,
+                  color: "var(--text-primary)", cursor: canEdit ? "text" : "default", lineHeight: 1.3,
                 }}
               >{title}</h2>
             )}
@@ -116,7 +126,8 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
               <textarea
                 value={desc}
                 onChange={e => setDesc(e.target.value)}
-                placeholder="Adicione uma descrição..."
+                readOnly={!canEdit}
+                placeholder={canEdit ? "Adicione uma descrição..." : "Sem descrição."}
                 rows={3}
                 style={{
                   width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)",
@@ -125,7 +136,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
                   fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5,
                   transition: "border-color 0.15s",
                 }}
-                onFocus={e => e.target.style.borderColor = "#00FF8760"}
+                onFocus={e => canEdit && (e.target.style.borderColor = "#00FF8760")}
                 onBlur={e => e.target.style.borderColor = "var(--border)"}
               />
             </div>
@@ -148,7 +159,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {subtasks.map(s => (
-                  <label key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <label key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, cursor: canEdit ? "pointer" : "default" }}>
                     <div
                       onClick={() => toggleSub(s.id)}
                       style={{
@@ -166,6 +177,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
                     </span>
                   </label>
                 ))}
+                {subtasks.length === 0 && <div style={{ fontSize: 12, color: "var(--text-disabled)", fontStyle: "italic" }}>Nenhuma subtarefa definida.</div>}
               </div>
             </div>
 
@@ -189,8 +201,24 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Responsável</label>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Avatar initials={task.assigneeInitials} size={24} />
-                <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{task.assignee}</span>
+                {isAvailable ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <span style={{ fontSize: 13, color: "var(--text-disabled)", fontStyle: "italic" }}>Sem responsável</span>
+                    <button
+                      onClick={() => onAccept(task.id)}
+                      style={{
+                        background: "var(--accent)", color: "#0D0D0D", border: "none",
+                        borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                      }}
+                    >Aceitar tarefa →</button>
+                  </div>
+                ) : (
+                  <>
+                    <Avatar initials={task.assigneeInitials} size={24} />
+                    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{task.assignee}</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -201,6 +229,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
                 type="date"
                 value={due}
                 onChange={e => setDue(e.target.value)}
+                readOnly={!canEdit}
                 style={{
                   background: "var(--bg-card)", border: "1px solid var(--border)",
                   borderRadius: 8, color: "var(--text-primary)", fontSize: 13,
@@ -218,10 +247,10 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
                 {pBtns.map(b => (
                   <button
                     key={b.key}
-                    onClick={() => setPriority(b.key)}
+                    onClick={() => canEdit && setPriority(b.key)}
                     style={{
                       flex: 1, padding: "7px 4px", borderRadius: 6, fontSize: 11, fontWeight: 500,
-                      cursor: "pointer", transition: "all 0.15s",
+                      cursor: canEdit ? "pointer" : "default", transition: "all 0.15s",
                       border: priority === b.key ? `1px solid ${b.color}` : "1px solid var(--border)",
                       background: priority === b.key ? b.color + "20" : "var(--bg-card)",
                       color: priority === b.key ? b.color : "var(--text-secondary)",
@@ -239,41 +268,37 @@ export default function TaskModal({ task, onClose, onSave, onDelete }) {
                 {COLUMNS.find(c => c.id === task.status)?.label}
               </div>
             </div>
-
-            {/* Project */}
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Projeto</label>
-              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, color: "var(--text-primary)" }}>
-                Projeto Alpha ▾
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Modal footer */}
         <div style={{ padding: "16px 28px", borderTop: "1px solid var(--border)", display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button
-            onClick={() => onDelete(task.id)}
-            style={{
-              background: "transparent", border: "none", cursor: "pointer",
-              color: "#FF4C4C", fontSize: 13, padding: "9px 16px",
-              borderRadius: 8, fontFamily: "'DM Sans', sans-serif",
-              transition: "background 0.15s",
-            }}
-            onMouseOver={e => e.currentTarget.style.background = "#FF4C4C15"}
-            onMouseOut={e => e.currentTarget.style.background = "transparent"}
-          >Excluir tarefa</button>
-          <button
-            onClick={handleSave}
-            style={{
-              background: "var(--accent)", border: "none", borderRadius: 8,
-              color: "#0D0D0D", fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 500, fontSize: 14, padding: "9px 24px",
-              cursor: "pointer", transition: "background 0.2s",
-            }}
-            onMouseOver={e => e.target.style.background = "var(--accent-dark)"}
-            onMouseOut={e => e.target.style.background = "var(--accent)"}
-          >Salvar</button>
+          {showDelete && (
+            <button
+              onClick={() => onDelete(task.id)}
+              style={{
+                background: "transparent", border: "none", cursor: "pointer",
+                color: "#FF4C4C", fontSize: 13, padding: "9px 16px",
+                borderRadius: 8, fontFamily: "'DM Sans', sans-serif",
+                transition: "background 0.15s",
+              }}
+              onMouseOver={e => e.currentTarget.style.background = "#FF4C4C15"}
+              onMouseOut={e => e.currentTarget.style.background = "transparent"}
+            >Excluir tarefa</button>
+          )}
+          {canEdit && (
+            <button
+              onClick={handleSave}
+              style={{
+                background: "var(--accent)", border: "none", borderRadius: 8,
+                color: "#0D0D0D", fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 500, fontSize: 14, padding: "9px 24px",
+                cursor: "pointer", transition: "background 0.2s",
+              }}
+              onMouseOver={e => e.target.style.background = "var(--accent-dark)"}
+              onMouseOut={e => e.target.style.background = "var(--accent)"}
+            >Salvar alterações</button>
+          )}
         </div>
       </div>
     </div>

@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Avatar from './Avatar.jsx';
 import { formatDue, isOverdue } from '../utils.js';
 import { PRIORITY_COLORS } from '../data.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskCard({ task, onClick, isDragging, onDragStart, onDragEnd, style: extStyle, animDelay }) {
+export default function TaskCard({ task, onClick, isDragging, onDragStart, onDragEnd, style: extStyle, animDelay, onAccept }) {
+  const { currentUser } = useAuth();
   const overdue = isOverdue(task.due) && task.status !== "done";
   const pColor = PRIORITY_COLORS[task.priority];
   const prog = task.subtasks.total > 0 ? task.subtasks.done / task.subtasks.total : 0;
+  const isAvailable = !task.assignee;
+  const isMine = task.assigneeInitials === currentUser.initials;
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
@@ -15,28 +20,22 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
       onDragEnd={onDragEnd}
       onClick={() => onClick(task)}
       className="anim-fadeInUp"
-      data-card-id={task.id}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: "var(--bg-card)",
-        border: "1px solid var(--border)",
+        border: isAvailable ? "1px dashed #2A2A2A" : "1px solid var(--border)",
         borderRadius: 10,
         padding: "14px 14px 14px 18px",
         cursor: "pointer",
         position: "relative",
         overflow: "hidden",
         opacity: isDragging ? 0.35 : 1,
-        transition: "opacity 0.15s, border-color 0.15s, box-shadow 0.15s",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+        transition: "all 0.15s",
+        boxShadow: hovered && isAvailable ? "0 0 0 1px #00FF8720, 0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.4)",
+        borderColor: hovered && isAvailable ? "var(--accent)" : (isAvailable ? "#2A2A2A" : "var(--border)"),
         animationDelay: animDelay || "0ms",
         ...extStyle,
-      }}
-      onMouseOver={e => {
-        e.currentTarget.style.borderColor = "#00FF8730";
-        e.currentTarget.style.boxShadow = "0 0 0 1px #00FF8720, 0 4px 24px rgba(0,0,0,0.4)";
-      }}
-      onMouseOut={e => {
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.4)";
       }}
     >
       {/* Priority bar */}
@@ -45,8 +44,18 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
         width: 3, background: pColor, borderRadius: "10px 0 0 10px",
       }}/>
 
+      {/* Available Badge */}
+      {isAvailable && (
+        <div style={{
+          position: "absolute", top: 12, right: 12,
+          background: "var(--accent-soft)", color: "var(--accent)",
+          fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
+          letterSpacing: "0.05em"
+        }}>DISPONÍVEL</div>
+      )}
+
       {/* Title */}
-      <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)", lineHeight: 1.45, marginBottom: 8 }}>
+      <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)", lineHeight: 1.45, marginBottom: 8, paddingRight: isAvailable ? 70 : 0 }}>
         {task.title}
       </p>
 
@@ -64,10 +73,31 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
 
       {/* Footer */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-        <Avatar initials={task.assigneeInitials} size={20} />
+        {isAvailable ? (
+          <div style={{ width: 20, height: 20, borderRadius: "50%", border: "1px dashed #7A7A7A", display: "flex", alignItems: "center", justifyContent: "center", color: "#7A7A7A", fontSize: 12 }}>+</div>
+        ) : (
+          <Avatar initials={task.assigneeInitials} size={20} />
+        )}
+        
         <span style={{ fontSize: 12, color: overdue ? "#FF4C4C" : "var(--text-secondary)", flex: 1 }}>
           {overdue && "⚠ "}{formatDue(task.due)}
         </span>
+
+        {isMine && !isAvailable && (
+          <span style={{ fontSize: 10, color: "#7A7A7A", fontWeight: 500, marginRight: 8 }}>Aceito por você</span>
+        )}
+
+        {isAvailable && hovered && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAccept(task.id); }}
+            style={{
+              background: "var(--accent)", color: "#0D0D0D", border: "none",
+              borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 500,
+              cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+            }}
+          >Aceitar tarefa →</button>
+        )}
+
         <span style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 3 }}>
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
             <rect x="0.5" y="0.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1"/>

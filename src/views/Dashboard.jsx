@@ -1,5 +1,5 @@
 import React from 'react';
-import Avatar from './Avatar.jsx';
+import Avatar from '../components/Avatar.jsx';
 import { isOverdue, TODAY } from '../utils.js';
 
 export default function Dashboard({ tasks, onTaskClick }) {

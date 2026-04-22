@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { COLUMNS } from '../data.js';
 
-export default function NewTaskModal({ onClose, onCreate }) {
+export default function NewTaskModal({ onClose, onCreate, columns }) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
   const [due, setDue] = useState("2025-07-01");
@@ -69,7 +69,7 @@ export default function NewTaskModal({ onClose, onCreate }) {
                 outline: "none", fontFamily: "'DM Sans', sans-serif", colorScheme: "dark",
               }}
             >
-              {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              {columns.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
 

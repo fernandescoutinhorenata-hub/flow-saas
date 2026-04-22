@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Avatar from './Avatar.jsx';
-import Toggle from './Toggle.jsx';
+import Avatar from '../components/Avatar.jsx';
+import Toggle from '../components/Toggle.jsx';
 
 export default function Settings({ currentUser, hasPermission }) {
   const [activeTab, setActiveTab] = useState("perfil");

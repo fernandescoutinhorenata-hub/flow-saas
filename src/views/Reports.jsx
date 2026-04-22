@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Avatar from './Avatar.jsx';
+import Avatar from '../components/Avatar.jsx';
 import { isOverdue } from '../utils.js';
 
 export default function Reports({ tasks }) {
