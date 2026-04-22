@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../hooks/useAuth.js';
+import { useUsers } from '../hooks/useUsers.js';
 
 export default function Settings({ currentUser, hasPermission, addToast }) {
   const { inviteMember } = useAuth();
+  const { users, loading, toggleUserActive } = useUsers();
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
-  const [membros, setMembros] = useState([
-    { id: 1, name: "Ana S.", role: "Designer", type: "Admin", active: true },
-    { id: 2, name: "Lucas M.", role: "Dev Frontend", type: "Membro", active: true },
-    { id: 3, name: "Carla T.", role: "PM", type: "Membro", active: false }
-  ]);
   const [compact, setCompact] = useState(false);
   const [density, setDensity] = useState("Confortável");
   
@@ -163,16 +160,57 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
                 </form>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {(membros || []).map((m) => (
-                  <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <Avatar initials={m.name.substring(0,2).toUpperCase()} size={36} />
+                {loading ? (
+                  <div style={{ color:'var(--text-secondary)', 
+                    fontSize:13 }}>Carregando membros...</div>
+                ) : users.length === 0 ? (
+                  <div style={{ color:'var(--text-secondary)', 
+                    fontSize:13 }}>Nenhum membro cadastrado.</div>
+                ) : users.map(u => (
+                  <div key={u.id} style={{ 
+                    display:'flex', justifyContent:'space-between', 
+                    alignItems:'center', padding:16,
+                    border:'1px solid var(--border)', 
+                    borderRadius:8, background:'var(--bg-card)' 
+                  }}>
+                    <div style={{ display:'flex', 
+                      alignItems:'center', gap:12 }}>
+                      <Avatar initials={u.initials || '?'} size={36} />
                       <div>
-                        <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500, marginBottom: 2 }}>{m.name} <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 400 }}>({m.type})</span></div>
-                        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{m.role}</div>
+                        <div style={{ fontSize:14, 
+                          color:'var(--text-primary)', 
+                          fontWeight:500, marginBottom:2 }}>
+                          {u.name}
+                          <span style={{ fontSize:11, 
+                            color:'var(--text-secondary)', 
+                            fontWeight:400, marginLeft:6 }}>
+                            ({u.role})
+                          </span>
+                        </div>
+                        <div style={{ fontSize:12, 
+                          color:'var(--text-secondary)' }}>
+                          {u.email}
+                        </div>
                       </div>
                     </div>
-                    <Toggle checked={m.active} onChange={val => setMembros((membros || []).map(x => x.id === m.id ? {...x, active: val} : x))} />
+                    <div style={{ display:'flex', 
+                      alignItems:'center', gap:12 }}>
+                      <span style={{ 
+                        fontSize:10, fontWeight:700,
+                        padding:'2px 8px', borderRadius:4,
+                        background: u.active 
+                          ? 'var(--accent-soft)' : '#3A3A3A',
+                        color: u.active 
+                          ? 'var(--accent)' : 'var(--text-secondary)',
+                        textTransform:'uppercase'
+                      }}>
+                        {u.active ? 'Ativo' : 'Inativo'}
+                      </span>
+                      <Toggle 
+                        checked={u.active} 
+                        onChange={val => toggleUserActive(u.id, val)} 
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
