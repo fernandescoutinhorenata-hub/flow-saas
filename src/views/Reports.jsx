@@ -5,9 +5,9 @@ import { isOverdue } from '../utils.js';
 export default function Reports({ tasks }) {
   const [filters, setFilters] = useState({ period: "month", member: "all", project: "all" });
 
-  const total = tasks.length;
-  const done = tasks.filter(t => t.status === "done").length;
-  const overdue = tasks.filter(t => isOverdue(t.due) && t.status !== "done").length;
+  const total = (tasks || []).length;
+  const done = (tasks || []).filter(t => t.status === "done").length;
+  const overdue = (tasks || []).filter(t => isOverdue(t.due) && t.status !== "done").length;
 
   const members = [
     { name: "Ana S.", avatar: "AS", created: 12, done: 10, overdue: 0, rate: 83 },
@@ -90,7 +90,7 @@ export default function Reports({ tasks }) {
             </tr>
           </thead>
           <tbody>
-            {members.map((m, i) => (
+            {(members || []).map((m, i) => (
               <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
                 <td style={{ padding: "12px 8px", display: "flex", alignItems: "center", gap: 12, borderLeft: m.rate === 100 ? "3px solid var(--accent)" : "3px solid transparent", marginLeft: -3 }}>
                   <Avatar initials={m.avatar} size={28} /> <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{m.name}</span>

@@ -69,7 +69,7 @@ export default function NewTaskModal({ onClose, onCreate, columns }) {
                 outline: "none", fontFamily: "'DM Sans', sans-serif", colorScheme: "dark",
               }}
             >
-              {columns.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              {(columns || []).map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
 

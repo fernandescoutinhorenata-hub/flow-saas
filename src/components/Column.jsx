@@ -73,12 +73,12 @@ export default function Column({ col, tasks, onCardClick, dragState, onDragStart
           <span style={{
             background: "var(--border)", color: "var(--text-secondary)",
             fontSize: 11, padding: "2px 7px", borderRadius: 4,
-          }}>{tasks.length}</span>
+          }}>{(tasks || []).length}</span>
         </div>
 
         {/* Cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {tasks.map((task, i) => (
+          {(tasks || []).map((task, i) => (
             <TaskCard
               key={task.id}
               task={task}
@@ -90,7 +90,7 @@ export default function Column({ col, tasks, onCardClick, dragState, onDragStart
               animDelay={`${i * 50}ms`}
             />
           ))}
-          {tasks.length === 0 && (
+          {(tasks || []).length === 0 && (
             <div style={{
               height: 60, border: "1px dashed var(--border)",
               borderRadius: 8, display: "flex", alignItems: "center",

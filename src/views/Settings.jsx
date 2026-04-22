@@ -13,13 +13,13 @@ export default function Settings({ currentUser, hasPermission }) {
   const [compact, setCompact] = useState(false);
   const [density, setDensity] = useState("Confortável");
 
-  const tabs = [
+  const tabs = ([
     { id: "perfil", label: "Perfil" },
     { id: "projetos", label: "Projetos", perm: "manage_members" },
     { id: "membros", label: "Membros", perm: "manage_members" },
     { id: "notificacoes", label: "Notificações" },
     { id: "aparencia", label: "Aparência" },
-  ].filter(t => !t.perm || hasPermission(t.perm));
+  ]).filter(t => !t.perm || hasPermission(t.perm));
 
   return (
     <div className="anim-fadeInUp" style={{ flex: 1, padding: "24px 32px", overflowY: "auto", display: "flex", flexDirection: "column" }}>
@@ -28,7 +28,7 @@ export default function Settings({ currentUser, hasPermission }) {
       <div style={{ display: "flex", gap: 32, flex: 1, alignItems: "flex-start" }}>
         {/* Sidebar settings */}
         <div style={{ width: 200, display: "flex", flexDirection: "column", gap: 4 }}>
-          {tabs.map(t => (
+          {(tabs || []).map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
               background: activeTab === t.id ? "var(--bg-surface)" : "transparent",
               border: "none", color: activeTab === t.id ? "var(--accent)" : "var(--text-secondary)",
@@ -70,7 +70,7 @@ export default function Settings({ currentUser, hasPermission }) {
                 <button style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>+ Novo Projeto</button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {[{ name: "Projeto Alpha", status: "Em andamento", date: "30 Jun" }, { name: "Redesign App", status: "Em andamento", date: "15 Ago" }].map((p, i) => (
+                {([{ name: "Projeto Alpha", status: "Em andamento", date: "30 Jun" }, { name: "Redesign App", status: "Em andamento", date: "15 Ago" }] || []).map((p, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
                     <div>
                       <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500, marginBottom: 4 }}>{p.name}</div>
@@ -90,7 +90,7 @@ export default function Settings({ currentUser, hasPermission }) {
                 <button style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>+ Convidar</button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {membros.map((m) => (
+                {(membros || []).map((m) => (
                   <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <Avatar initials={m.name.substring(0,2).toUpperCase()} size={36} />
@@ -99,7 +99,7 @@ export default function Settings({ currentUser, hasPermission }) {
                         <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{m.role}</div>
                       </div>
                     </div>
-                    <Toggle checked={m.active} onChange={val => setMembros(membros.map(x => x.id === m.id ? {...x, active: val} : x))} />
+                    <Toggle checked={m.active} onChange={val => setMembros((membros || []).map(x => x.id === m.id ? {...x, active: val} : x))} />
                   </div>
                 ))}
               </div>
@@ -110,12 +110,12 @@ export default function Settings({ currentUser, hasPermission }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }} className="anim-fadeInUp">
               <h3 style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600 }}>Preferências de Notificação</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                {[
+                {([
                   { id: "n1", label: "Tarefa atribuída a mim" },
                   { id: "n2", label: "Prazo chegando (48h antes)" },
                   { id: "n3", label: "Tarefa movida de coluna" },
                   { id: "n4", label: "Comentário na minha tarefa" }
-                ].map(n => (
+                ] || []).map(n => (
                   <div key={n.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: "1px solid var(--border)" }}>
                     <span style={{ fontSize: 14, color: "var(--text-primary)" }}>{n.label}</span>
                     <Toggle checked={notifs[n.id]} onChange={val => setNotifs({...notifs, [n.id]: val})} />
@@ -148,7 +148,7 @@ export default function Settings({ currentUser, hasPermission }) {
               <div>
                 <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 12, fontWeight: 600 }}>Densidade da Interface</label>
                 <div style={{ display: "flex", gap: 12 }}>
-                  {["Confortável", "Compacto", "Ultra-compacto"].map((d, i) => (
+                  {(["Confortável", "Compacto", "Ultra-compacto"] || []).map((d, i) => (
                     <button key={i} onClick={() => setDensity(d)} style={{ flex: 1, padding: "10px", background: density === d ? "var(--accent-soft)" : "var(--bg-card)", border: density === d ? "1px solid var(--accent)" : "1px solid var(--border)", borderRadius: 8, color: density === d ? "var(--accent)" : "var(--text-secondary)", cursor: "pointer", fontSize: 13, transition: "all 0.2s" }}>{d}</button>
                   ))}
                 </div>

@@ -3,7 +3,7 @@ import React from 'react';
 export default function Toast({ toasts }) {
   return (
     <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 10000, display: "flex", flexDirection: "column", gap: 8 }}>
-      {toasts.map(t => (
+      {(toasts || []).map(t => (
         <div key={t.id} style={{
           background: "var(--bg-card)", border: "1px solid var(--border)",
           borderLeft: "3px solid var(--accent)", borderRadius: 8,

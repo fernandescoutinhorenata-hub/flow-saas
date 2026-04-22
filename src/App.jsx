@@ -38,8 +38,8 @@ export default function App() {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, exiting: false }]);
     toastTimer.current[id] = setTimeout(() => {
-      setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 350);
+      setToasts(prev => (prev || []).map(t => t.id === id ? { ...t, exiting: true } : t));
+      setTimeout(() => setToasts(prev => (prev || []).filter(t => t.id !== id)), 350);
     }, 2800);
   }
 
@@ -60,7 +60,7 @@ export default function App() {
     if (!dragId) return;
     const task = tasks.find(t => t.id === dragId);
     if (!task || task.status === colId) return;
-    setTasks(prev => prev.map(t => t.id === dragId ? { ...t, status: colId } : t));
+    setTasks(prev => (prev || []).map(t => t.id === dragId ? { ...t, status: colId } : t));
     const colName = columns.find(c => c.id === colId)?.label;
     addToast(`"${task.title.slice(0, 30)}…" movido para ${colName}`);
     setDragState({ dragId: null, overCol: null });
@@ -86,7 +86,7 @@ export default function App() {
 
     const tasksInCol = tasks.filter(t => t.status === columnId);
     if (tasksInCol.length > 0) {
-      setTasks(prev => prev.map(t => t.status === columnId ? { ...t, status: "backlog" } : t));
+      setTasks(prev => (prev || []).map(t => t.status === columnId ? { ...t, status: "backlog" } : t));
       addToast(`${tasksInCol.length} tarefa(s) movida(s) para o Backlog`);
     }
 
@@ -97,14 +97,14 @@ export default function App() {
 
   function handleRenameColumn(columnId, newLabel) {
     if (currentUser.role !== "admin") return;
-    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, label: newLabel.toUpperCase() } : c));
+    setColumns(prev => (prev || []).map(c => c.id === columnId ? { ...c, label: newLabel.toUpperCase() } : c));
     addToast("Coluna renomeada.");
   }
 
   function handleCardClick(task) { setActiveModal(task); }
 
   function handleSaveTask(updated) {
-    setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
+    setTasks(prev => (prev || []).map(t => t.id === updated.id ? updated : t));
     setActiveModal(null);
     addToast("Tarefa salva com sucesso.");
   }
@@ -142,7 +142,7 @@ export default function App() {
       return;
     }
 
-    const updatedTasks = tasks.map(t => t.id === id ? {
+    const updatedTasks = (tasks || []).map(t => t.id === id ? {
       ...t,
       assignee: currentUser.name === "Você" ? "Você" : currentUser.name,
       assigneeInitials: currentUser.initials
@@ -171,7 +171,7 @@ export default function App() {
   }
 
   function handleRespondTicket(ticketId, text) {
-    setRegistros(prev => prev.map(t => {
+    setRegistros(prev => (prev || []).map(t => {
       if (t.id === ticketId) {
         const response = {
           id: Date.now(),
@@ -182,7 +182,7 @@ export default function App() {
           text,
           createdAt: new Date().toISOString(),
         };
-        return { ...t, responses: [...t.responses, response] };
+        return { ...t, responses: [...(t.responses || []), response] };
       }
       return t;
     }));
@@ -190,7 +190,7 @@ export default function App() {
   }
 
   function handleUpdateTicketStatus(ticketId, status) {
-    setRegistros(prev => prev.map(t => t.id === ticketId ? { ...t, status } : t));
+    setRegistros(prev => (prev || []).map(t => t.id === ticketId ? { ...t, status } : t));
     addToast("Status do registro atualizado.");
   }
 
@@ -233,7 +233,7 @@ export default function App() {
 
         {/* Filters */}
         <div style={{ display: "flex", gap: 2 }}>
-          {[{ key: "all", label: "Todas" }, { key: "mine", label: "Minhas" }, { key: "overdue", label: "Atrasadas" }].map(f => (
+          {([{ key: "all", label: "Todas" }, { key: "mine", label: "Minhas" }, { key: "overdue", label: "Atrasadas" }] || []).map(f => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
@@ -275,7 +275,7 @@ export default function App() {
             padding: "20px 24px",
             display: "flex", gap: 16, alignItems: "flex-start",
           }}>
-            {columns.map(col => (
+            {(columns || []).map(col => (
               <Column
                 key={col.id}
                 col={col}
@@ -364,6 +364,7 @@ export default function App() {
         <NewTaskModal
           onClose={() => setShowNewTask(false)}
           onCreate={handleCreateTask}
+          columns={columns}
         />
       )}
 

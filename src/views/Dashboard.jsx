@@ -3,11 +3,11 @@ import Avatar from '../components/Avatar.jsx';
 import { isOverdue, TODAY } from '../utils.js';
 
 export default function Dashboard({ tasks, onTaskClick }) {
-  const total = tasks.length;
-  const doing = tasks.filter(t => t.status === "doing").length;
-  const done = tasks.filter(t => t.status === "done").length;
-  const overdueTasks = tasks.filter(t => isOverdue(t.due) && t.status !== "done");
-  const overdue = overdueTasks.length;
+  const total = (tasks || []).length;
+  const doing = (tasks || []).filter(t => t.status === "doing").length;
+  const done = (tasks || []).filter(t => t.status === "done").length;
+  const overdueTasks = (tasks || []).filter(t => isOverdue(t.due) && t.status !== "done");
+  const overdue = (overdueTasks || []).length;
 
   return (
     <div className="anim-fadeInUp" style={{ flex: 1, padding: "24px 32px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 24 }}>
@@ -58,9 +58,9 @@ export default function Dashboard({ tasks, onTaskClick }) {
         <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: 10, padding: 20 }}>
           <h3 style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>Tarefas Atrasadas</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {overdueTasks.length === 0 ? (
+            {(overdueTasks || []).length === 0 ? (
               <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>Nenhuma tarefa atrasada.</p>
-            ) : overdueTasks.slice(0, 4).map(t => {
+            ) : (overdueTasks || []).slice(0, 4).map(t => {
               const days = Math.floor((TODAY - new Date(t.due + "T00:00:00")) / (1000 * 60 * 60 * 24));
               return (
                 <div key={t.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>

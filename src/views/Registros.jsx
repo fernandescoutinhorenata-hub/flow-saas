@@ -12,7 +12,7 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
   const [activeTicket, setActiveTicket] = useState(null);
   const [showNew, setShowNew] = useState(false);
 
-  const myTickets = tickets.filter(t => {
+  const myTickets = (tickets || []).filter(t => {
     if (currentUser && currentUser.role === "membro") return t.authorId === currentUser.id;
     return true;
   });
@@ -67,10 +67,10 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
 
       {/* List */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
-        {filtered.map(t => (
+        {(filtered || []).map(t => (
           <TicketCard key={t.id} ticket={t} onClick={() => setActiveTicket(t)} />
         ))}
-        {filtered.length === 0 && (
+        {(filtered || []).length === 0 && (
           <div style={{ gridColumn: "1/-1", padding: 64, textAlign: "center", color: "var(--text-disabled)", border: "1px dashed var(--border)", borderRadius: 12 }}>
             Nenhum registro encontrado.
           </div>

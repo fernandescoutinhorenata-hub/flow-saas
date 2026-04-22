@@ -18,7 +18,7 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav }) {
       padding: "12px 8px", transition: "width 0.2s ease",
       overflow: "hidden",
     }}>
-      {items.map(item => {
+      {(items || []).map(item => {
         const active = activeNav === item.id;
         return (
           <div

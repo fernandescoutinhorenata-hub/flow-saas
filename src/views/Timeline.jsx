@@ -36,14 +36,14 @@ export default function Timeline() {
         {/* Eixo central */}
         <div style={{ position: "absolute", top: 0, bottom: 0, left: 16, width: 2, background: "var(--border)", borderRadius: 2 }} />
         
-        {events.map((group, gi) => (
+        {(events || []).map((group, gi) => (
           <div key={gi} style={{ marginBottom: 32 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16, position: "relative", left: -40 }}>
               <span style={{ background: "var(--bg-base)", paddingRight: 8 }}>{group.date}</span>
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              {group.items.map(item => (
+              {(group.items || []).map(item => (
                 <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
                   <div style={{ position: "absolute", left: -29, width: 10, height: 10, borderRadius: "50%", background: item.color, border: "2px solid var(--bg-base)", zIndex: 2 }} />
                   <Avatar initials={item.assigneeInitials} size={28} />
