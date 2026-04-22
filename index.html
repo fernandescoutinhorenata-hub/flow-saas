@@ -177,7 +177,8 @@ function newId() { return ++_nextId; }
 
 /* ── AVATAR ──────────────────────────────────────────────── */
 function Avatar({ initials, size = 24, color = "#00FF87", roleBadge }) {
-  const hue = initials.charCodeAt(0) % 360;
+  const safeInitials = initials || "?";
+  const hue = safeInitials.charCodeAt(0) % 360;
   const bg = `oklch(0.35 0.08 ${hue})`;
   
   const roleColors = { admin: "#00FF87", gestor: "#FFB800", membro: "#7A7A7A" };
@@ -192,7 +193,7 @@ function Avatar({ initials, size = 24, color = "#00FF87", roleBadge }) {
         fontWeight: 600, color: "#F0F0F0", flexShrink: 0,
         border: badgeBorder ? `1.5px solid ${badgeBorder}` : "1.5px solid #2A2A2A",
         fontFamily: "'DM Sans', sans-serif",
-      }}>{initials}</div>
+      }}>{safeInitials}</div>
       {roleBadge && (
         <div style={{
           position: "absolute", bottom: -6, left: "50%", transform: "translateX(-50%)",
@@ -984,10 +985,7 @@ function NewTaskModal({ onClose, onCreate, columns }) {
               color:"var(--text-primary)", fontSize:13, 
               padding:"9px 10px", outline: "none",
               colorScheme: "dark" }}>
-              <option value="backlog">BACKLOG</option>
-              <option value="doing">EM ANDAMENTO</option>
-              <option value="review">REVISÃO</option>
-              <option value="done">CONCLUÍDO</option>
+              {columns && columns.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
 
