@@ -19,13 +19,13 @@ import RoleSelector from './components/RoleSelector.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import { useTasks } from './hooks/useTasks.js';
 import { useColumns } from './hooks/useColumns.js';
-import { useTickets } from './hooks/useTickets.js';
+import { useRegistros } from './hooks/useRegistros.js';
 export default function App() {
   const { user, profile, currentUser, loading: authLoading, hasPermission, signOut } = useAuth();
   
   const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks();
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
-  const { tickets, createTicket, respondTicket, updateTicketStatus } = useTickets();
+  const { tickets, createTicket, respondTicket, updateTicketStatus } = useRegistros();
   
   const [activeModal, setActiveModal] = useState(null);
   const [showNewTask, setShowNewTask] = useState(false);
