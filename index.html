@@ -1970,6 +1970,24 @@ function App() {
     setColumns(prev => prev.map(c => c.id === colId ? { ...c, label: newLabel.toUpperCase() } : c));
   }
 
+  function handleCreateTask({ title, priority, due, status }) {
+    const newTask = {
+      id: newId(),
+      title,
+      priority,
+      due,
+      status,
+      assignee: null,
+      assigneeInitials: null,
+      subtasks: { done: 0, total: 0 },
+      tags: [],
+      description: "",
+    };
+    setTasks(prev => [...prev, newTask]);
+    setShowNewTask(false);
+    addToast(`✅ Tarefa "${title}" criada!`);
+  }
+
   function handleCardClick(task) { setActiveModal(task); }
 
   function handleSaveTask(updated) {
