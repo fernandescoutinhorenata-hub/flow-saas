@@ -21,8 +21,9 @@ import { useTasks } from './hooks/useTasks.js';
 import { useColumns } from './hooks/useColumns.js';
 import { useTickets } from './hooks/useTickets.js';
 export default function App() {
-  const [screen, setScreen] = useState("login");
-  const { tasks, loading, createTask, updateTask, deleteTask, moveTask } = useTasks();
+  const { user, profile, currentUser, loading: authLoading, hasPermission, signOut } = useAuth();
+  
+  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks();
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
   const { tickets, createTicket, respondTicket, updateTicketStatus } = useTickets();
   
@@ -36,7 +37,6 @@ export default function App() {
   const [confirmDeleteCol, setConfirmDeleteCol] = useState(null);
   const toastTimer = useRef({});
 
-  const { currentUser, hasPermission } = useAuth();
 
   function addToast(message) {
     const id = Date.now();
@@ -47,7 +47,7 @@ export default function App() {
     }, 2800);
   }
 
-  function handleLogin() { setScreen("app"); }
+  function handleLogin() { /* Não necessário mais com Auth real */ }
 
   function handleDragStart(e, taskId) {
     e.dataTransfer.effectAllowed = "move";
@@ -180,9 +180,7 @@ export default function App() {
     return true;
   });
 
-  if (screen === "login") return <Login onLogin={handleLogin} />;
-
-  if (loading) return (
+  if (authLoading) return (
     <div style={{ 
       display: 'flex', alignItems: 'center', 
       justifyContent: 'center', height: '100vh',
@@ -192,7 +190,23 @@ export default function App() {
       background: "var(--bg-base)"
     }}>
       <span className="anim-pulse">FLOW</span>
-      <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>carregando...</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>validando acesso...</span>
+    </div>
+  );
+
+  if (!user) return <Login />;
+
+  if (tasksLoading) return (
+    <div style={{ 
+      display: 'flex', alignItems: 'center', 
+      justifyContent: 'center', height: '100vh',
+      color: 'var(--accent)', 
+      fontFamily: "'Syne', sans-serif",
+      fontSize: 24, gap: 12,
+      background: "var(--bg-base)"
+    }}>
+      <span className="anim-pulse">FLOW</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>carregando dados...</span>
     </div>
   );
 
@@ -256,7 +270,26 @@ export default function App() {
           <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nova Tarefa
         </button>
 
-        <Avatar initials={currentUser.initials} size={32} roleBadge={currentUser.role} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Avatar initials={currentUser?.initials} size={32} roleBadge={currentUser?.role} />
+          <button 
+            onClick={signOut}
+            title="Sair"
+            style={{ 
+              background: "none", border: "none", color: "var(--text-secondary)", 
+              cursor: "pointer", fontSize: 18, padding: "4px", borderRadius: 6,
+              transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center"
+            }}
+            onMouseOver={e => { e.currentTarget.style.color = "#FF4C4C"; e.currentTarget.style.background = "rgba(255, 76, 76, 0.1)"; }}
+            onMouseOut={e => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "transparent"; }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {/* Body */}

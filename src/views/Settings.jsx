@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
+import { useAuth } from '../hooks/useAuth.js';
 
 export default function Settings({ currentUser, hasPermission }) {
+  const { inviteMember } = useAuth();
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
   const [membros, setMembros] = useState([
@@ -12,6 +14,26 @@ export default function Settings({ currentUser, hasPermission }) {
   ]);
   const [compact, setCompact] = useState(false);
   const [density, setDensity] = useState("Confortável");
+  
+  // Invite state
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteData, setInviteData] = useState({ name: '', email: '', role: 'membro' });
+  const [inviting, setInviting] = useState(false);
+
+  async function handleInvite(e) {
+    e.preventDefault();
+    setInviting(true);
+    try {
+      await inviteMember(inviteData);
+      alert(`Convite enviado para ${inviteData.email}`);
+      setShowInvite(false);
+      setInviteData({ name: '', email: '', role: 'membro' });
+    } catch (err) {
+      alert("Erro ao enviar convite.");
+    } finally {
+      setInviting(false);
+    }
+  }
 
   const tabs = ([
     { id: "perfil", label: "Perfil" },
@@ -87,8 +109,54 @@ export default function Settings({ currentUser, hasPermission }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }} className="anim-fadeInUp">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600 }}>Membros da Equipe</h3>
-                <button style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>+ Convidar</button>
+                <button 
+                  onClick={() => setShowInvite(!showInvite)}
+                  style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} 
+                  onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} 
+                  onMouseOut={e => e.currentTarget.style.background = "transparent"}
+                >
+                  {showInvite ? "Cancelar" : "+ Convidar"}
+                </button>
               </div>
+
+              {showInvite && (
+                <form onSubmit={handleInvite} style={{ background: "var(--bg-card)", padding: 20, borderRadius: 10, border: "1px solid var(--accent-soft)", display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <input 
+                      placeholder="Nome" 
+                      required
+                      value={inviteData.name} 
+                      onChange={e => setInviteData({...inviteData, name: e.target.value})}
+                      style={{ background: "var(--bg-base)", border: "1px solid var(--border)", padding: "8px 12px", borderRadius: 6, color: "var(--text-primary)", outline: "none" }}
+                    />
+                    <input 
+                      type="email" 
+                      placeholder="Email" 
+                      required
+                      value={inviteData.email} 
+                      onChange={e => setInviteData({...inviteData, email: e.target.value})}
+                      style={{ background: "var(--bg-base)", border: "1px solid var(--border)", padding: "8px 12px", borderRadius: 6, color: "var(--text-primary)", outline: "none" }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <select 
+                      value={inviteData.role} 
+                      onChange={e => setInviteData({...inviteData, role: e.target.value})}
+                      style={{ flex: 1, background: "var(--bg-base)", border: "1px solid var(--border)", padding: "8px 12px", borderRadius: 6, color: "var(--text-primary)", outline: "none" }}
+                    >
+                      <option value="membro">Membro</option>
+                      <option value="gestor">Gestor</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <button 
+                      disabled={inviting}
+                      style={{ background: "var(--accent)", border: "none", color: "#0D0D0D", padding: "8px 24px", borderRadius: 6, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      {inviting ? "Enviando..." : "Enviar Convite"}
+                    </button>
+                  </div>
+                </form>
+              )}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {(membros || []).map((m) => (
                   <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
