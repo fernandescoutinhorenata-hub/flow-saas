@@ -54,19 +54,33 @@ export function useAuth() {
     await supabase.auth.signOut()
   }
 
-  async function inviteMember({ name, email, role, initials }) {
+  async function inviteMember({ name, email, role }) {
+    const initials = name
+      .split(' ')
+      .map(p => p[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
+
     // 1. Cadastra na tabela users
-    await supabase.from('users').insert([{
-      name, email, role, 
-      initials: initials || name.substring(0,2).toUpperCase(),
-      active: true
-    }])
-    // 2. Envia convite via Supabase Auth (requer service_role ou API específica)
-    // Nota: admin.inviteUserByEmail requer privilégios de admin
-    const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { name, role }
-    })
-    if (error) throw error
+    const { error: dbError } = await supabase
+      .from('users')
+      .insert([{ 
+        name, email, role, 
+        initials, active: true 
+      }])
+    
+    if (dbError) throw dbError
+
+    // 2. Envia convite via Edge Function
+    const { data, error: inviteError } = await supabase
+      .functions.invoke('invite-user', {
+        body: { email, name, role }
+      })
+
+    if (inviteError || (data && data.error)) {
+      throw new Error(inviteError?.message || data?.error || "Erro ao enviar convite")
+    }
   }
 
   const hasPermission = (action) => {

@@ -3,7 +3,7 @@ import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
-export default function Settings({ currentUser, hasPermission }) {
+export default function Settings({ currentUser, hasPermission, addToast }) {
   const { inviteMember } = useAuth();
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -25,11 +25,16 @@ export default function Settings({ currentUser, hasPermission }) {
     setInviting(true);
     try {
       await inviteMember(inviteData);
-      alert(`Convite enviado para ${inviteData.email}`);
+      addToast(`✅ Convite enviado para ${inviteData.email}`);
       setShowInvite(false);
       setInviteData({ name: '', email: '', role: 'membro' });
     } catch (err) {
-      alert("Erro ao enviar convite.");
+      const msg = err.message || "";
+      if (msg.includes("already exists") || msg.includes("unique")) {
+        addToast(`❌ Este email já está cadastrado`);
+      } else {
+        addToast("❌ Erro ao enviar convite.");
+      }
     } finally {
       setInviting(false);
     }

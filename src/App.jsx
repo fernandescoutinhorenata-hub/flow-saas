@@ -353,7 +353,7 @@ export default function App() {
         )}
 
         {activeNav === "settings" && (
-          <Settings currentUser={currentUser} hasPermission={hasPermission} />
+          <Settings currentUser={currentUser} hasPermission={hasPermission} addToast={addToast} />
         )}
       </div>
 
