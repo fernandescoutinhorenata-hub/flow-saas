@@ -49,6 +49,11 @@ export const USERS = [
 ];
 
 export const PERMISSIONS = {
+  dono:   ["view_all_tasks", "edit_any_task", 
+           "delete_task", "manage_members", 
+           "view_reports", "view_dashboard", 
+           "create_task", "invite_members",
+           "owner_panel"],
   admin:  ["view_all_tasks", "edit_any_task", "delete_task", "manage_members", "view_reports", "view_dashboard", "create_task", "invite_members"],
   gestor: ["view_all_tasks", "edit_any_task", "view_reports", "view_dashboard", "create_task"],
   membro: ["edit_own_task"],
