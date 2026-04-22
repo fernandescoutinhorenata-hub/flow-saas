@@ -8,15 +8,16 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
   const [desc, setDesc] = useState(task.description || "");
+  const taskSubtasks = task.subtasks || { done: 0, total: 0 };
   const [subtasks, setSubtasks] = useState(
-    Array.from({ length: task.subtasks.total }, (_, i) => ({ id: i, label: `Subtarefa ${i + 1}`, done: i < task.subtasks.done }))
+    Array.from({ length: taskSubtasks.total || 0 }, (_, i) => ({ id: i, label: `Subtarefa ${i + 1}`, done: i < (taskSubtasks.done || 0) }))
   );
   const [priority, setPriority] = useState(task.priority);
   const [due, setDue] = useState(task.due);
   const titleRef = useRef();
 
   const isAvailable = !task.assignee;
-  const isOwner = task.assigneeInitials === currentUser.initials;
+  const isOwner = (task.assignee_initials || task.assigneeInitials) === currentUser.initials;
   
   const canEdit = !isAvailable && (hasPermission("edit_any_task") || (isOwner && currentUser.role === "membro"));
   const showDelete = !isAvailable && (hasPermission("delete_task") || (isOwner && currentUser.role === "gestor"));
@@ -215,7 +216,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
                   </div>
                 ) : (
                   <>
-                    <Avatar initials={task.assigneeInitials} size={24} />
+                    <Avatar initials={task.assignee_initials || task.assigneeInitials} size={24} />
                     <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{task.assignee}</span>
                   </>
                 )}

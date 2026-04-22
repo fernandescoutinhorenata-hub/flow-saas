@@ -6,11 +6,14 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 export default function TaskCard({ task, onClick, isDragging, onDragStart, onDragEnd, style: extStyle, animDelay, onAccept }) {
   const { currentUser } = useAuth();
+  const subtasks = task.subtasks || { done: 0, total: 0 };
+  const tags = task.tags || [];
+  const assigneeInitials = task.assignee_initials || task.assigneeInitials;
   const overdue = isOverdue(task.due) && task.status !== "done";
   const pColor = PRIORITY_COLORS[task.priority];
-  const prog = task.subtasks.total > 0 ? task.subtasks.done / task.subtasks.total : 0;
+  const prog = subtasks.total > 0 ? subtasks.done / subtasks.total : 0;
   const isAvailable = !task.assignee;
-  const isMine = task.assigneeInitials === currentUser.initials;
+  const isMine = assigneeInitials === currentUser.initials;
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -60,9 +63,9 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
       </p>
 
       {/* Tags */}
-      {task.tags.length > 0 && (
+      {tags.length > 0 && (
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
-          {task.tags.map(tag => (
+          {tags.map(tag => (
             <span key={tag} style={{
               background: "var(--border)", color: "var(--text-secondary)",
               fontSize: 11, padding: "3px 7px", borderRadius: 4,
@@ -76,7 +79,7 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
         {isAvailable ? (
           <div style={{ width: 20, height: 20, borderRadius: "50%", border: "1px dashed #7A7A7A", display: "flex", alignItems: "center", justifyContent: "center", color: "#7A7A7A", fontSize: 12 }}>+</div>
         ) : (
-          <Avatar initials={task.assigneeInitials} size={20} />
+          <Avatar initials={assigneeInitials} size={20} />
         )}
         
         <span style={{ fontSize: 12, color: overdue ? "#FF4C4C" : "var(--text-secondary)", flex: 1 }}>
@@ -101,14 +104,14 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
         <span style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 3 }}>
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
             <rect x="0.5" y="0.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1"/>
-            {task.subtasks.done > 0 && <path d="M2.5 5.5l2 2 4-4" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>}
+            {subtasks.done > 0 && <path d="M2.5 5.5l2 2 4-4" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>}
           </svg>
-          {task.subtasks.done}/{task.subtasks.total}
+          {subtasks.done}/{subtasks.total}
         </span>
       </div>
 
       {/* Progress bar */}
-      {task.subtasks.total > 0 && (
+      {subtasks.total > 0 && (
         <div style={{ marginTop: 8, height: 2, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${prog * 100}%`, background: prog === 1 ? "var(--accent)" : "#FFB800", borderRadius: 99, transition: "width 0.3s" }}/>
         </div>

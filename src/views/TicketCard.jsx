@@ -38,15 +38,15 @@ export default function TicketCard({ ticket, onClick }) {
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: "auto" }}>
-        <Avatar initials={ticket.authorInitials} size={20} />
-        <span style={{ fontSize: 12, color: "var(--text-secondary)", flex: 1 }}>{ticket.author}</span>
-        <span style={{ fontSize: 11, color: "var(--text-disabled)" }}>{timeAgo(ticket.createdAt)}</span>
+        <Avatar initials={ticket.author_initials || ticket.authorInitials} size={20} />
+        <span style={{ fontSize: 12, color: "var(--text-secondary)", flex: 1 }}>{ticket.author_name || ticket.author}</span>
+        <span style={{ fontSize: 11, color: "var(--text-disabled)" }}>{timeAgo(ticket.created_at || ticket.createdAt)}</span>
       </div>
 
-      {ticket.responses.length > 0 && (
+      {(ticket.ticket_responses || ticket.responses || []).length > 0 && (
         <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 4, color: "var(--text-secondary)", fontSize: 11 }}>
           <span>💬</span>
-          <span>{ticket.responses.length} {ticket.responses.length === 1 ? "resposta" : "respostas"}</span>
+          <span>{(ticket.ticket_responses || ticket.responses || []).length} {(ticket.ticket_responses || ticket.responses || []).length === 1 ? "resposta" : "respostas"}</span>
         </div>
       )}
     </div>

@@ -7,9 +7,10 @@ import { timeAgo } from '../utils.js';
 export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond }) {
   const { currentUser, hasPermission } = useAuth();
   const [responseText, setResponseText] = useState("");
-  const isAuthor = ticket.authorId === currentUser.id;
+  const isAuthor = (ticket.author_id || ticket.authorId) === currentUser.id;
   const canRespond = hasPermission("manage_members") || currentUser.role === "gestor";
   const typeInfo = TICKET_TYPES[ticket.type];
+  const responses = ticket.ticket_responses || ticket.responses || [];
 
   return (
     <div className="anim-fadeIn" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -49,20 +50,20 @@ export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 16 }}>Respostas</label>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {ticket.responses.map(r => (
+                {(responses || []).map(r => (
                   <div key={r.id} style={{ background: "var(--bg-surface)", borderRadius: 8, padding: 16, border: "1px solid var(--border)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <Avatar initials={r.authorInitials} size={24} />
-                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{r.author}</span>
-                        {r.role && <span style={{ fontSize: 10, fontWeight: 700, color: r.role === "admin" ? "var(--accent)" : "#FFB800", textTransform: "uppercase", background: "rgba(0,0,0,0.3)", padding: "1px 5px", borderRadius: 3 }}>{r.role}</span>}
+                        <Avatar initials={r.author_initials || r.authorInitials} size={24} />
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{r.author_name || r.author}</span>
+                        {(r.author_role || r.role) && <span style={{ fontSize: 10, fontWeight: 700, color: (r.author_role || r.role) === "admin" ? "var(--accent)" : "#FFB800", textTransform: "uppercase", background: "rgba(0,0,0,0.3)", padding: "1px 5px", borderRadius: 3 }}>{r.author_role || r.role}</span>}
                       </div>
-                      <span style={{ fontSize: 11, color: "var(--text-disabled)" }}>{timeAgo(r.createdAt)}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-disabled)" }}>{timeAgo(r.created_at || r.createdAt)}</span>
                     </div>
                     <p style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: 1.5 }}>{r.text}</p>
                   </div>
                 ))}
-                {ticket.responses.length === 0 && (
+                {(responses || []).length === 0 && (
                   <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-disabled)", fontStyle: "italic" }}>
                     Aguardando resposta da equipe...
                   </div>
@@ -113,14 +114,14 @@ export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond
             <div>
               <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 8 }}>Autor</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Avatar initials={ticket.authorInitials} size={32} />
-                <span style={{ fontSize: 14, color: "var(--text-primary)" }}>{ticket.author}</span>
+                <Avatar initials={ticket.author_initials || ticket.authorInitials} size={32} />
+                <span style={{ fontSize: 14, color: "var(--text-primary)" }}>{ticket.author_name || ticket.author}</span>
               </div>
             </div>
 
             <div>
               <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 8 }}>Criado em</div>
-              <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{new Date(ticket.createdAt).toLocaleString("pt-BR")}</span>
+              <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{new Date(ticket.created_at || ticket.createdAt).toLocaleString("pt-BR")}</span>
             </div>
           </div>
         </div>

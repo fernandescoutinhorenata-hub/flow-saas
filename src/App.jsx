@@ -17,9 +17,15 @@ import Settings from './views/Settings.jsx';
 import NewColumnButton from './components/NewColumnGhost.jsx';
 import RoleSelector from './components/RoleSelector.jsx';
 import { useAuth } from './context/AuthContext.jsx';
+import { useTasks } from './hooks/useTasks.js';
+import { useColumns } from './hooks/useColumns.js';
+import { useTickets } from './hooks/useTickets.js';
 export default function App() {
   const [screen, setScreen] = useState("login");
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const { tasks, loading, createTask, updateTask, deleteTask, moveTask } = useTasks();
+  const { columns, addColumn, removeColumn, renameColumn } = useColumns();
+  const { tickets, createTicket, respondTicket, updateTicketStatus } = useTickets();
+  
   const [activeModal, setActiveModal] = useState(null);
   const [showNewTask, setShowNewTask] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -27,9 +33,7 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeNav, setActiveNav] = useState("board");
-  const [columns, setColumns] = useState(COLUMNS);
   const [confirmDeleteCol, setConfirmDeleteCol] = useState(null);
-  const [registros, setRegistros] = useState(INITIAL_TICKETS);
   const toastTimer = useRef({});
 
   const { currentUser, hasPermission } = useAuth();
@@ -58,66 +62,52 @@ export default function App() {
     e.preventDefault();
     const { dragId } = dragState;
     if (!dragId) return;
-    const task = tasks.find(t => t.id === dragId);
+    const task = (tasks || []).find(t => t.id === dragId);
     if (!task || task.status === colId) return;
-    setTasks(prev => (prev || []).map(t => t.id === dragId ? { ...t, status: colId } : t));
-    const colName = columns.find(c => c.id === colId)?.label;
+    
+    moveTask(dragId, colId);
+    
+    const colName = (columns || []).find(c => c.id === colId)?.label;
     addToast(`"${task.title.slice(0, 30)}…" movido para ${colName}`);
     setDragState({ dragId: null, overCol: null });
   }
 
   function handleAddColumn(label) {
-    const newCol = {
-      id: `col_${Date.now()}`,
-      label: label.toUpperCase(),
-      locked: false
-    };
-    // Inserir entre EM ANDAMENTO (doing) e CONCLUÍDO (done)
-    const newCols = [...columns];
-    const doneIndex = newCols.findIndex(c => c.id === "done");
-    newCols.splice(doneIndex, 0, newCol);
-    setColumns(newCols);
-    addToast(`Coluna "${newCol.label}" adicionada.`);
+    addColumn(label);
+    addToast(`Coluna "${label.toUpperCase()}" adicionada.`);
   }
 
   function handleRemoveColumn(columnId) {
-    const col = columns.find(c => c.id === columnId);
+    const col = (columns || []).find(c => c.id === columnId);
     if (!col || col.locked) return;
 
-    const tasksInCol = tasks.filter(t => t.status === columnId);
-    if (tasksInCol.length > 0) {
-      setTasks(prev => (prev || []).map(t => t.status === columnId ? { ...t, status: "backlog" } : t));
-      addToast(`${tasksInCol.length} tarefa(s) movida(s) para o Backlog`);
-    }
-
-    setColumns(prev => prev.filter(c => c.id !== columnId));
+    removeColumn(columnId);
     setConfirmDeleteCol(null);
     addToast(`Coluna "${col.label}" removida.`);
   }
 
   function handleRenameColumn(columnId, newLabel) {
     if (currentUser.role !== "admin") return;
-    setColumns(prev => (prev || []).map(c => c.id === columnId ? { ...c, label: newLabel.toUpperCase() } : c));
+    renameColumn(columnId, newLabel);
     addToast("Coluna renomeada.");
   }
 
   function handleCardClick(task) { setActiveModal(task); }
 
   function handleSaveTask(updated) {
-    setTasks(prev => (prev || []).map(t => t.id === updated.id ? updated : t));
+    updateTask(updated.id, updated);
     setActiveModal(null);
     addToast("Tarefa salva com sucesso.");
   }
 
   function handleDeleteTask(id) {
-    setTasks(prev => prev.filter(t => t.id !== id));
+    deleteTask(id);
     setActiveModal(null);
     addToast("Tarefa excluída.");
   }
 
   function handleCreateTask({ title, priority, due, status }) {
     const newTask = {
-      id: newId(),
       title,
       priority,
       due,
@@ -127,14 +117,15 @@ export default function App() {
       subtasks: { done: 0, total: 0 },
       tags: [],
       description: "",
+      position: (tasks || []).length
     };
-    setTasks(prev => [...prev, newTask]);
+    createTask(newTask);
     setShowNewTask(false);
     addToast(`✅ Tarefa "${title}" criada!`);
   }
 
   function handleAcceptTask(id) {
-    const task = tasks.find(t => t.id === id);
+    const task = (tasks || []).find(t => t.id === id);
     if (!task) return;
     
     if (currentUser.role === "membro" && task.assignee) {
@@ -142,65 +133,68 @@ export default function App() {
       return;
     }
 
-    const updatedTasks = (tasks || []).map(t => t.id === id ? {
-      ...t,
+    const updates = {
       assignee: currentUser.name === "Você" ? "Você" : currentUser.name,
       assigneeInitials: currentUser.initials
-    } : t);
+    };
     
-    setTasks(updatedTasks);
+    updateTask(id, updates);
     if (activeModal && activeModal.id === id) {
-      setActiveModal({ ...activeModal, assignee: currentUser.name, assigneeInitials: currentUser.initials });
+      setActiveModal({ ...activeModal, ...updates });
     }
     addToast("✅ Tarefa aceita com sucesso!");
   }
 
   function handleCreateTicket(data) {
     const newTicket = {
-      id: Date.now(),
       ...data,
-      authorId: currentUser.id,
-      author: currentUser.name,
-      authorInitials: currentUser.initials,
+      author_id: currentUser.id,
+      author_name: currentUser.name,
+      author_initials: currentUser.initials,
       status: "aberto",
-      createdAt: new Date().toISOString(),
-      responses: [],
     };
-    setRegistros(prev => [newTicket, ...prev]);
+    createTicket(newTicket);
     addToast("Novo registro aberto com sucesso.");
   }
 
   function handleRespondTicket(ticketId, text) {
-    setRegistros(prev => (prev || []).map(t => {
-      if (t.id === ticketId) {
-        const response = {
-          id: Date.now(),
-          authorId: currentUser.id,
-          author: currentUser.name,
-          authorInitials: currentUser.initials,
-          role: currentUser.role,
-          text,
-          createdAt: new Date().toISOString(),
-        };
-        return { ...t, responses: [...(t.responses || []), response] };
-      }
-      return t;
-    }));
+    const response = {
+      author_id: currentUser.id,
+      author_name: currentUser.name,
+      author_initials: currentUser.initials,
+      author_role: currentUser.role,
+      text,
+    };
+    respondTicket(ticketId, response);
     addToast("Resposta enviada.");
   }
 
   function handleUpdateTicketStatus(ticketId, status) {
-    setRegistros(prev => (prev || []).map(t => t.id === ticketId ? { ...t, status } : t));
+    updateTicketStatus(ticketId, status);
     addToast("Status do registro atualizado.");
   }
 
-  const filteredTasks = tasks.filter(t => {
+  const filteredTasks = (tasks || []).filter(t => {
     if (filter === "mine") return t.assignee === "Você" || t.assigneeInitials === "VC";
     if (filter === "overdue") return isOverdue(t.due) && t.status !== "done";
     return true;
   });
 
   if (screen === "login") return <Login onLogin={handleLogin} />;
+
+  if (loading) return (
+    <div style={{ 
+      display: 'flex', alignItems: 'center', 
+      justifyContent: 'center', height: '100vh',
+      color: 'var(--accent)', 
+      fontFamily: "'Syne', sans-serif",
+      fontSize: 24, gap: 12,
+      background: "var(--bg-base)"
+    }}>
+      <span className="anim-pulse">FLOW</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>carregando...</span>
+    </div>
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -305,7 +299,7 @@ export default function App() {
 
         {activeNav === "registros" && (
           <Registros
-            tickets={registros}
+            tickets={tickets}
             onUpdateStatus={handleUpdateTicketStatus}
             onCreate={handleCreateTicket}
             onRespond={handleRespondTicket}
