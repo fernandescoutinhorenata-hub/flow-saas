@@ -3,10 +3,13 @@ import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 import { useUsers } from '../hooks/useUsers.js';
+import { useProjects } from '../hooks/useProjects.js';
 
 export default function Settings({ currentUser, hasPermission, addToast }) {
   const { inviteMember } = useAuth();
-  const { users, loading, toggleUserActive } = useUsers();
+  const { users, loading: usersLoading, toggleUserActive } = useUsers();
+  const { projects, loading: projectsLoading, deleteProject } = useProjects();
+  
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
   const [compact, setCompact] = useState(false);
@@ -17,7 +20,9 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
   const [inviteData, setInviteData] = useState({ name: '', email: '', role: 'membro' });
   const [inviting, setInviting] = useState(false);
 
-  // A página agora renderiza mesmo sem os dados, usando optional chaining.
+  // Delete project state
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleInvite(e) {
     e.preventDefault();
@@ -36,6 +41,20 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
       }
     } finally {
       setInviting(false);
+    }
+  }
+
+  async function handleDeleteProject() {
+    if (!confirmDeleteProject) return;
+    setIsDeleting(true);
+    try {
+      await deleteProject(confirmDeleteProject.id);
+      addToast("✅ Projeto excluído com sucesso.");
+      setConfirmDeleteProject(null);
+    } catch (err) {
+      addToast("❌ Erro ao excluir projeto.");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -96,13 +115,34 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
                 <button style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>+ Novo Projeto</button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {([{ name: "Projeto Alpha", status: "Em andamento", date: "30 Jun" }, { name: "Redesign App", status: "Em andamento", date: "15 Ago" }] || []).map((p, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
+                {projectsLoading ? (
+                  <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Carregando projetos...</div>
+                ) : projects.length === 0 ? (
+                  <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Nenhum projeto encontrado.</div>
+                ) : projects.map((p) => (
+                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
                     <div>
                       <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500, marginBottom: 4 }}>{p.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.status} • Entrega: {p.date}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.status || "Ativo"} • Criado: {new Date(p.created_at).toLocaleDateString("pt-BR")}</div>
                     </div>
-                    <button style={{ background: "none", border: "none", color: "#FF4C4C", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#FF4C4C15"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>Arquivar</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>Arquivar</button>
+                      <span style={{ color: "#3A3A3A" }}>|</span>
+                      <button 
+                        onClick={() => setConfirmDeleteProject(p)}
+                        style={{ background: "none", border: "none", color: "#FF4C4C", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "all 0.2s" }} 
+                        onMouseOver={e => {
+                          e.currentTarget.style.background = "#FF4C4C10";
+                          e.currentTarget.style.color = "#FF6B6B";
+                        }} 
+                        onMouseOut={e => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = "#FF4C4C";
+                        }}
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -162,7 +202,7 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
                 </form>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {loading ? (
+                {usersLoading ? (
                   <div style={{ color:'var(--text-secondary)', 
                     fontSize:13 }}>Carregando membros...</div>
                 ) : users.length === 0 ? (
@@ -270,6 +310,33 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmDeleteProject && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
+          <div className="anim-scaleIn" style={{ background: "var(--bg-card)", padding: 32, borderRadius: 16, border: "1px solid var(--border)", width: 400, textAlign: "center" }}>
+            <h3 style={{ fontSize: 20, color: "var(--text-primary)", marginBottom: 12, fontWeight: 700 }}>Excluir projeto?</h3>
+            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 32, lineHeight: 1.5 }}>
+              Essa ação é permanente e removerá todas as tarefas vinculadas ao projeto <strong>{confirmDeleteProject.name}</strong>.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <button 
+                onClick={handleDeleteProject}
+                disabled={isDeleting}
+                style={{ width: "100%", padding: 12, background: "#FF4C4C", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}
+              >
+                {isDeleting ? "Excluindo..." : "Excluir permanentemente"}
+              </button>
+              <button 
+                onClick={() => setConfirmDeleteProject(null)}
+                style={{ width: "100%", padding: 12, background: "transparent", color: "var(--text-secondary)", border: "none", borderRadius: 8, fontWeight: 500, cursor: "pointer" }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
