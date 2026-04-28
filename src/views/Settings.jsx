@@ -17,14 +17,7 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
   const [inviteData, setInviteData] = useState({ name: '', email: '', role: 'membro' });
   const [inviting, setInviting] = useState(false);
 
-  // Verificação de segurança para evitar crash
-  if (!currentUser) {
-    return (
-      <div style={{ flex: 1, padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>
-        <div className="anim-pulse">Validando informações do perfil...</div>
-      </div>
-    );
-  }
+  // A página agora renderiza mesmo sem os dados, usando optional chaining.
 
   async function handleInvite(e) {
     e.preventDefault();
@@ -79,17 +72,17 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
           {activeTab === "perfil" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }} className="anim-fadeInUp">
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <Avatar initials={currentUser.initials} size={64} />
+                <Avatar initials={currentUser?.initials || ''} size={64} />
                 <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--border)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>Trocar Avatar</button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
                   <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 600 }}>Nome Completo</label>
-                  <input type="text" defaultValue={currentUser.name} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
+                  <input type="text" defaultValue={currentUser?.name || ''} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 600 }}>E-mail</label>
-                  <input type="email" defaultValue={currentUser.email || "voce@flow.com"} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
+                  <input type="email" defaultValue={currentUser?.email || "voce@flow.com"} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
                 </div>
               </div>
               <button style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 500, alignSelf: "flex-start", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-dark)"} onMouseOut={e => e.currentTarget.style.background = "var(--accent)"}>Salvar Alterações</button>

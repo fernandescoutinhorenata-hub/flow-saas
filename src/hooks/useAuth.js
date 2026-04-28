@@ -8,11 +8,26 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.email)
-      else setLoading(false)
-    })
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 5000)
+
+    const init = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await fetchProfile(session.user.email)
+        }
+      } catch (err) {
+        console.error('Auth error:', err)
+      } finally {
+        clearTimeout(timeout)
+        setLoading(false)
+      }
+    }
+
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -24,7 +39,10 @@ export function useAuth() {
         }
       }
     )
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchProfile(email) {
