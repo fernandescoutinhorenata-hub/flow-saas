@@ -8,7 +8,7 @@ import { useProjects } from '../hooks/useProjects.js';
 export default function Settings({ currentUser, hasPermission, addToast }) {
   const { inviteMember } = useAuth();
   const { users, loading: usersLoading, toggleUserActive } = useUsers();
-  const { projects, loading: projectsLoading, deleteProject } = useProjects();
+  const { projects, loading: projectsLoading, deleteProject, createProject } = useProjects();
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -20,7 +20,10 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
   const [inviteData, setInviteData] = useState({ name: '', email: '', role: 'membro' });
   const [inviting, setInviting] = useState(false);
 
-  // Delete project state
+  // Project states
+  const [showNewProject, setShowNewProject] = useState(false);
+  const [newProjectData, setNewProjectData] = useState({ name: '', description: '', deadline: '' });
+  const [isCreating, setIsCreating] = useState(false);
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -41,6 +44,23 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
       }
     } finally {
       setInviting(false);
+    }
+  }
+
+  async function handleCreateProject(e) {
+    e.preventDefault();
+    if (!newProjectData.name) return;
+    
+    setIsCreating(true);
+    try {
+      await createProject(newProjectData);
+      addToast("✅ Projeto criado com sucesso!");
+      setShowNewProject(false);
+      setNewProjectData({ name: '', description: '', deadline: '' });
+    } catch (err) {
+      addToast("❌ Erro ao criar projeto.");
+    } finally {
+      setIsCreating(false);
     }
   }
 
@@ -112,7 +132,14 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }} className="anim-fadeInUp">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600 }}>Projetos Ativos</h3>
-                <button style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>+ Novo Projeto</button>
+                <button 
+                  onClick={() => setShowNewProject(true)}
+                  style={{ background: "transparent", border: "1px solid var(--accent)", borderRadius: 8, color: "var(--accent)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s", fontWeight: 500 }} 
+                  onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} 
+                  onMouseOut={e => e.currentTarget.style.background = "transparent"}
+                >
+                  + Novo Projeto
+                </button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {projectsLoading ? (
@@ -310,6 +337,75 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
           )}
         </div>
       </div>
+
+      {/* New Project Modal */}
+      {showNewProject && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000, padding: 20 }}>
+          <div className="anim-scaleIn" style={{ background: "#242424", width: "100%", maxWidth: 440, borderRadius: 16, border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(0,0,0,0.7)", overflow: "hidden" }}>
+            <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'DM Sans', sans-serif" }}>Novo Projeto</h3>
+              <button onClick={() => setShowNewProject(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 24, cursor: "pointer" }}>&times;</button>
+            </div>
+            
+            <form onSubmit={handleCreateProject} style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>Nome do projeto *</label>
+                <input 
+                  autoFocus
+                  required
+                  placeholder="Ex: Redesign do App"
+                  value={newProjectData.name}
+                  onChange={e => setNewProjectData({...newProjectData, name: e.target.value})}
+                  style={{ width: "100%", background: "#161616", border: "1px solid #2A2A2A", padding: "12px 14px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}
+                  onFocus={e => e.target.style.borderColor = "#00FF87"}
+                  onBlur={e => e.target.style.borderColor = "#2A2A2A"}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>Descrição</label>
+                <textarea 
+                  placeholder="Breve descrição dos objetivos..."
+                  value={newProjectData.description}
+                  onChange={e => setNewProjectData({...newProjectData, description: e.target.value})}
+                  style={{ width: "100%", height: 80, background: "#161616", border: "1px solid #2A2A2A", padding: "12px 14px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14, resize: "none" }}
+                  onFocus={e => e.target.style.borderColor = "#00FF87"}
+                  onBlur={e => e.target.style.borderColor = "#2A2A2A"}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>Data de entrega</label>
+                <input 
+                  type="date"
+                  value={newProjectData.deadline}
+                  onChange={e => setNewProjectData({...newProjectData, deadline: e.target.value})}
+                  style={{ width: "100%", background: "#161616", border: "1px solid #2A2A2A", padding: "12px 14px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}
+                  onFocus={e => e.target.style.borderColor = "#00FF87"}
+                  onBlur={e => e.target.style.borderColor = "#2A2A2A"}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+                <button 
+                  type="submit"
+                  disabled={isCreating}
+                  style={{ flex: 1, background: "#00FF87", color: "#0D0D0D", border: "none", padding: "12px", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  {isCreating ? "Criando..." : "Criar Projeto"}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setShowNewProject(false)}
+                  style={{ flex: 1, background: "transparent", color: "var(--text-secondary)", border: "1px solid var(--border)", padding: "12px", borderRadius: 8, fontWeight: 500, cursor: "pointer", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {confirmDeleteProject && (

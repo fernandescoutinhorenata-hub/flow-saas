@@ -38,5 +38,26 @@ export function useProjects() {
     await fetchProjects()
   }
 
-  return { projects, loading, deleteProject, refetch: fetchProjects }
+  async function createProject(project) {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
+        name: project.name,
+        description: project.description,
+        deadline: project.deadline,
+        status: 'em andamento',
+        created_at: new Date().toISOString()
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Erro ao criar projeto:', error)
+      throw error
+    }
+    await fetchProjects()
+    return data
+  }
+
+  return { projects, loading, deleteProject, createProject, refetch: fetchProjects }
 }
