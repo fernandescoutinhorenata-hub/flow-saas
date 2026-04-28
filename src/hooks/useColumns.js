@@ -7,19 +7,11 @@ export function useColumns() {
   useEffect(() => {
     fetchColumns()
     
-    const channel = supabase.channel(`columns-changes-${Date.now()}`)
-    
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'columns' },
-      () => fetchColumns()
-    )
-    
-    channel.subscribe()
+    const interval = setInterval(() => {
+      fetchColumns()
+    }, 3000)
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchColumns() {
@@ -38,6 +30,7 @@ export function useColumns() {
     await supabase.from('columns')
       .insert([{ id, label: label.toUpperCase(), 
                  locked: false, position }])
+    await fetchColumns()
   }
 
   async function removeColumn(colId) {
@@ -48,12 +41,14 @@ export function useColumns() {
     // Depois deletar a coluna
     await supabase.from('columns')
       .delete().eq('id', colId)
+    await fetchColumns()
   }
 
   async function renameColumn(colId, newLabel) {
     await supabase.from('columns')
       .update({ label: newLabel.toUpperCase() })
       .eq('id', colId)
+    await fetchColumns()
   }
 
   return { columns, addColumn, removeColumn, renameColumn }

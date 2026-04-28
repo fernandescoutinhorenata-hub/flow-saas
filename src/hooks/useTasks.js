@@ -8,19 +8,11 @@ export function useTasks() {
   useEffect(() => {
     fetchTasks()
     
-    const channel = supabase.channel(`tasks-changes-${Date.now()}`)
-    
-    channel.on(
-      'postgres_changes', 
-      { event: '*', schema: 'public', table: 'tasks' },
-      () => fetchTasks()
-    )
-    
-    channel.subscribe()
+    const interval = setInterval(() => {
+      fetchTasks()
+    }, 3000)
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchTasks() {
@@ -39,10 +31,8 @@ export function useTasks() {
       .select()
       .single()
     
-    // Fallback: Refetch manual caso o realtime falhe ou demore
-    setTimeout(() => {
-      fetchTasks()
-    }, 500)
+    // Refetch imediato
+    await fetchTasks()
 
     if (error) throw error
     return data
@@ -53,10 +43,12 @@ export function useTasks() {
       .from('tasks')
       .update({ ...updates, updated_at: new Date() })
       .eq('id', id)
+    await fetchTasks()
   }
 
   async function deleteTask(id) {
     await supabase.from('tasks').delete().eq('id', id)
+    await fetchTasks()
   }
 
   async function moveTask(id, status) {
@@ -64,6 +56,7 @@ export function useTasks() {
       .from('tasks')
       .update({ status, updated_at: new Date() })
       .eq('id', id)
+    await fetchTasks()
   }
 
   return { tasks, loading, createTask, 

@@ -7,19 +7,11 @@ export function useRegistros() {
   useEffect(() => {
     fetchTickets()
     
-    const channel = supabase.channel(`registros-changes-${Date.now()}`)
-    
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'tickets' },
-      () => fetchTickets()
-    )
-    
-    channel.subscribe()
+    const interval = setInterval(() => {
+      fetchTickets()
+    }, 3000)
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchTickets() {
@@ -32,16 +24,19 @@ export function useRegistros() {
 
   async function createTicket(ticket) {
     await supabase.from('tickets').insert([ticket])
+    await fetchTickets()
   }
 
   async function respondTicket(ticketId, response) {
     await supabase.from('ticket_responses')
       .insert([{ ...response, ticket_id: ticketId }])
+    await fetchTickets()
   }
 
   async function updateTicketStatus(id, status) {
     await supabase.from('tickets')
       .update({ status }).eq('id', id)
+    await fetchTickets()
   }
 
   return { tickets, createTicket, 

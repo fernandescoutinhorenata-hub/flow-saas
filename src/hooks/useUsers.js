@@ -8,19 +8,11 @@ export function useUsers() {
   useEffect(() => {
     fetchUsers()
     
-    const channel = supabase.channel(`users-changes-${Date.now()}`)
-    
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'users' },
-      () => fetchUsers()
-    )
-    
-    channel.subscribe()
+    const interval = setInterval(() => {
+      fetchUsers()
+    }, 3000)
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchUsers() {
@@ -37,7 +29,7 @@ export function useUsers() {
       .from('users')
       .update({ active })
       .eq('id', id)
-    fetchUsers()
+    await fetchUsers()
   }
 
   return { users, loading, toggleUserActive }
