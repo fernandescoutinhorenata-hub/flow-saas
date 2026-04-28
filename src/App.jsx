@@ -111,12 +111,10 @@ export default function App() {
     const newTask = {
       title,
       priority,
-      due,
+      due_date: due,
       status,
       assignee: null,
-      assigneeInitials: null,
-      subtasks: { done: 0, total: 0 },
-      tags: [],
+      assignee_initials: null,
       description: "",
       position: (tasks || []).length
     };
@@ -136,7 +134,7 @@ export default function App() {
 
     const updates = {
       assignee: currentUser?.name === "Você" ? "Você" : currentUser?.name,
-      assigneeInitials: currentUser?.initials
+      assignee_initials: currentUser?.initials
     };
     
     updateTask(id, updates);
@@ -176,7 +174,7 @@ export default function App() {
   }
 
   const filteredTasks = (tasks || []).filter(t => {
-    if (filter === "mine") return t.assignee === "Você" || t.assigneeInitials === "VC";
+    if (filter === "mine") return t.assignee === "Você" || t.assignee_initials === currentUser?.initials;
     if (filter === "overdue") return isOverdue(t.due) && t.status !== "done";
     return true;
   });

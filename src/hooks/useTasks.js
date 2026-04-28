@@ -16,15 +16,13 @@ export function useTasks(projectId) {
   }, [projectId])
 
   const fetchTasks = async () => {
-    console.log('fetchTasks chamado, projectId:', projectId)
+    if (!projectId) return // guard: nunca executar com projectId undefined
     
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
       .eq('project_id', projectId)
-      .order('position')
-    
-    console.log('resultado:', data, 'erro:', error)
+      .order('position', { ascending: true })
     
     if (error) {
       console.error('Erro detalhado:', JSON.stringify(error))
