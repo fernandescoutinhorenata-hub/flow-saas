@@ -8,13 +8,15 @@ export function useTasks() {
   useEffect(() => {
     fetchTasks()
     
-    const channel = supabase
-      .channel('tasks-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'tasks' },
-        () => fetchTasks()
-      )
-      .subscribe()
+    const channel = supabase.channel(`tasks-changes-${Date.now()}`)
+    
+    channel.on(
+      'postgres_changes', 
+      { event: '*', schema: 'public', table: 'tasks' },
+      () => fetchTasks()
+    )
+    
+    channel.subscribe()
 
     return () => {
       supabase.removeChannel(channel)

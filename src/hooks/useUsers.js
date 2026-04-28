@@ -7,13 +7,17 @@ export function useUsers() {
 
   useEffect(() => {
     fetchUsers()
-    const channel = supabase
-      .channel('users-changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'users' },
-        () => fetchUsers()
-      )
-      .subscribe()
+    
+    const channel = supabase.channel(`users-changes-${Date.now()}`)
+    
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'users' },
+      () => fetchUsers()
+    )
+    
+    channel.subscribe()
+
     return () => {
       supabase.removeChannel(channel)
     }
