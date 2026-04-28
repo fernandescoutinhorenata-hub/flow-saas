@@ -43,17 +43,14 @@ export function useProjects() {
       .from('projects')
       .insert([{
         name: project.name,
-        description: project.description,
-        deadline: project.deadline,
-        status: 'em andamento',
-        created_at: new Date().toISOString()
+        status: 'em andamento'
       }])
       .select()
       .single()
 
     if (error) {
       console.error('Erro ao criar projeto:', error)
-      throw error
+      return
     }
     await fetchProjects()
     return data
