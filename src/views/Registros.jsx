@@ -5,7 +5,7 @@ import TicketCard from './TicketCard.jsx';
 import TicketModal from './TicketModal.jsx';
 import NewTicketModal from './NewTicketModal.jsx';
 
-export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond }) {
+export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond, onDelete }) {
   const { currentUser } = useAuth();
   const [filter, setFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -83,6 +83,7 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
           onClose={() => setActiveTicket(null)}
           onUpdateStatus={onUpdateStatus}
           onRespond={onRespond}
+          onDelete={onDelete}
         />
       )}
 

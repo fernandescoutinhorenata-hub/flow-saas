@@ -4,7 +4,7 @@ import { TICKET_TYPES, TICKET_STATUS } from '../data.js';
 import Avatar from '../components/Avatar.jsx';
 import { timeAgo } from '../utils.js';
 
-export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond }) {
+export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond, onDelete }) {
   const { currentUser, hasPermission } = useAuth();
   const [responseText, setResponseText] = useState("");
   const isAuthor = (ticket.author_id || ticket.authorId) === currentUser.id;
@@ -128,6 +128,25 @@ export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond
 
         {/* Footer */}
         <div style={{ padding: "16px 28px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 12 }}>
+          {ticket.status === 'resolvido' && (
+            <button
+              onClick={() => { onDelete(ticket.id); onClose(); }}
+              style={{
+                background: "transparent",
+                border: "1px solid #FF4C4C",
+                color: "#FF4C4C",
+                padding: "10px 24px",
+                borderRadius: 8,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.15s"
+              }}
+              onMouseOver={e => e.currentTarget.style.background = "#FF4C4C20"}
+              onMouseOut={e => e.currentTarget.style.background = "transparent"}
+            >
+              Excluir
+            </button>
+          )}
           {canRespond && ticket.status !== "resolvido" && (
             <button onClick={() => onUpdateStatus(ticket.id, "resolvido")} style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "10px 24px", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>Marcar como Resolvido</button>
           )}

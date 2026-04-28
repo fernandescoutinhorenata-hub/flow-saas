@@ -55,5 +55,17 @@ export function useRegistros() {
     await fetchTickets()
   }
 
-  return { tickets, loading, createTicket, respondTicket, updateTicketStatus }
+  async function deleteTicket(id) {
+    const { error } = await supabase
+      .from('tickets')
+      .delete()
+      .eq('id', id)
+    if (error) {
+      console.error('Erro ao excluir:', error)
+      return
+    }
+    await fetchTickets()
+  }
+
+  return { tickets, loading, createTicket, respondTicket, updateTicketStatus, deleteTicket }
 }

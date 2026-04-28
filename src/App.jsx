@@ -26,7 +26,7 @@ export default function App() {
   
   const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks();
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
-  const { tickets, createTicket, respondTicket, updateTicketStatus } = useRegistros();
+  const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
   
   const [activeModal, setActiveModal] = useState(null);
   const [showNewTask, setShowNewTask] = useState(false);
@@ -170,6 +170,11 @@ export default function App() {
   function handleUpdateTicketStatus(ticketId, status) {
     updateTicketStatus(ticketId, status);
     addToast("Status do registro atualizado.");
+  }
+
+  function handleDeleteTicket(id) {
+    deleteTicket(id);
+    addToast("Registro excluído.");
   }
 
   const filteredTasks = (tasks || []).filter(t => {
@@ -334,6 +339,7 @@ export default function App() {
             onUpdateStatus={handleUpdateTicketStatus}
             onCreate={handleCreateTicket}
             onRespond={handleRespondTicket}
+            onDelete={handleDeleteTicket}
             currentUser={currentUser}
           />
         )}
