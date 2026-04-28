@@ -88,7 +88,7 @@ export default function App() {
   }
 
   function handleRenameColumn(columnId, newLabel) {
-    if (currentUser.role !== "admin") return;
+    if (currentUser?.role !== "admin") return;
     renameColumn(columnId, newLabel);
     addToast("Coluna renomeada.");
   }
@@ -129,14 +129,14 @@ export default function App() {
     const task = (tasks || []).find(t => t.id === id);
     if (!task) return;
     
-    if (currentUser.role === "membro" && task.assignee) {
+    if (currentUser?.role === "membro" && task.assignee) {
       addToast("Esta tarefa já possui um responsável.");
       return;
     }
 
     const updates = {
-      assignee: currentUser.name === "Você" ? "Você" : currentUser.name,
-      assigneeInitials: currentUser.initials
+      assignee: currentUser?.name === "Você" ? "Você" : currentUser?.name,
+      assigneeInitials: currentUser?.initials
     };
     
     updateTask(id, updates);
@@ -149,9 +149,9 @@ export default function App() {
   function handleCreateTicket(data) {
     const newTicket = {
       ...data,
-      author_id: currentUser.id,
-      author_name: currentUser.name,
-      author_initials: currentUser.initials,
+      author_id: currentUser?.id,
+      author_name: currentUser?.name,
+      author_initials: currentUser?.initials,
       status: "aberto",
     };
     createTicket(newTicket);
@@ -160,10 +160,10 @@ export default function App() {
 
   function handleRespondTicket(ticketId, text) {
     const response = {
-      author_id: currentUser.id,
-      author_name: currentUser.name,
-      author_initials: currentUser.initials,
-      author_role: currentUser.role,
+      author_id: currentUser?.id,
+      author_name: currentUser?.name,
+      author_initials: currentUser?.initials,
+      author_role: currentUser?.role,
       text,
     };
     respondTicket(ticketId, response);
@@ -315,7 +315,7 @@ export default function App() {
                 onDrop={handleDrop}
                 onDragOver={colId => setDragState(prev => ({ ...prev, overCol: colId }))}
                 onAccept={handleAcceptTask}
-                isAdmin={currentUser.role === "admin"}
+                isAdmin={currentUser?.role === "admin"}
                 onRename={handleRenameColumn}
                 onRemove={(id) => {
                   const col = columns.find(c => c.id === id);
@@ -325,7 +325,7 @@ export default function App() {
               />
             ))}
             
-            {currentUser.role === "admin" && (
+            {currentUser?.role === "admin" && (
               <NewColumnButton onAdd={handleAddColumn} />
             )}
           </main>

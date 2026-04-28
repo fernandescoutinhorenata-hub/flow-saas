@@ -6,13 +6,12 @@ export function useTasks(projectId) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!projectId) return
+    if (!projectId) {
+      setLoading(false) // sair do loading mesmo sem projectId
+      return
+    }
     fetchTasks()
-    
-    const interval = setInterval(() => {
-      fetchTasks()
-    }, 3000)
-
+    const interval = setInterval(fetchTasks, 3000)
     return () => clearInterval(interval)
   }, [projectId])
 

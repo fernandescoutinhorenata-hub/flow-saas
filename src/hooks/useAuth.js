@@ -53,9 +53,26 @@ export function useAuth() {
         .eq('email', email)
         .single()
       
-      if (data) setProfile(data)
+      if (data) {
+        setProfile(data)
+      } else {
+        // usuário autenticado mas sem perfil na tabela — criar perfil mínimo
+        setProfile({
+          email,
+          name: email.split('@')[0],
+          role: 'membro',
+          initials: email.slice(0, 2).toUpperCase()
+        })
+      }
     } catch (err) {
-      console.error("Erro ao buscar perfil:", err)
+      console.error('Erro ao buscar perfil:', err)
+      // nunca travar — setar perfil mínimo como fallback
+      setProfile({
+        email,
+        name: email.split('@')[0],
+        role: 'membro',
+        initials: email.slice(0, 2).toUpperCase()
+      })
     } finally {
       setLoading(false)
     }
