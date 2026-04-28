@@ -14,6 +14,7 @@ import Dashboard from './views/Dashboard.jsx';
 import Timeline from './views/Timeline.jsx';
 import Reports from './views/Reports.jsx';
 import Settings from './views/Settings.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NewColumnButton from './components/NewColumnGhost.jsx';
 import RoleSelector from './components/RoleSelector.jsx';
 import { useAuth } from './context/AuthContext.jsx';
@@ -353,7 +354,9 @@ export default function App() {
         )}
 
         {activeNav === "settings" && (
-          <Settings currentUser={currentUser} hasPermission={hasPermission} addToast={addToast} />
+          <ErrorBoundary>
+            <Settings currentUser={currentUser} hasPermission={hasPermission} addToast={addToast} />
+          </ErrorBoundary>
         )}
       </div>
 

@@ -17,6 +17,15 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
   const [inviteData, setInviteData] = useState({ name: '', email: '', role: 'membro' });
   const [inviting, setInviting] = useState(false);
 
+  // Verificação de segurança para evitar crash
+  if (!currentUser) {
+    return (
+      <div style={{ flex: 1, padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>
+        <div className="anim-pulse">Validando informações do perfil...</div>
+      </div>
+    );
+  }
+
   async function handleInvite(e) {
     e.preventDefault();
     setInviting(true);

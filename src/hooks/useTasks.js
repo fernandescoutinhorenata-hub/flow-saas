@@ -9,14 +9,16 @@ export function useTasks() {
     fetchTasks()
     
     const channel = supabase
-      .channel('tasks')
+      .channel('tasks-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'tasks' },
         () => fetchTasks()
       )
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   async function fetchTasks() {
@@ -29,11 +31,18 @@ export function useTasks() {
   }
 
   async function createTask(task) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .insert([task])
       .select()
       .single()
+    
+    // Fallback: Refetch manual caso o realtime falhe ou demore
+    setTimeout(() => {
+      fetchTasks()
+    }, 500)
+
+    if (error) throw error
     return data
   }
 

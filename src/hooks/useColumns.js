@@ -7,13 +7,15 @@ export function useColumns() {
   useEffect(() => {
     fetchColumns()
     const channel = supabase
-      .channel('columns')
+      .channel('columns-changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'columns' },
         () => fetchColumns()
       )
       .subscribe()
-    return () => supabase.removeChannel(channel)
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   async function fetchColumns() {

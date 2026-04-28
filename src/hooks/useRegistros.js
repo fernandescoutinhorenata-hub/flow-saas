@@ -7,13 +7,15 @@ export function useRegistros() {
   useEffect(() => {
     fetchTickets()
     const channel = supabase
-      .channel('tickets')
+      .channel('tickets-changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'tickets' },
         () => fetchTickets()
       )
       .subscribe()
-    return () => supabase.removeChannel(channel)
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   async function fetchTickets() {
