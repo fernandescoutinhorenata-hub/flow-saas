@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { logActivity } from '../lib/logActivity'
 
 export function useTasks() {
+  const { currentUser } = useAuth()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -32,6 +35,10 @@ export function useTasks() {
       .select()
       .single()
 
+    if (!error) {
+      logActivity({ userName: currentUser?.name, action: `criou a tarefa "${task.title}"` })
+    }
+
     await fetchTasks()
 
     if (error) throw error
@@ -47,15 +54,31 @@ export function useTasks() {
   }
 
   async function deleteTask(id) {
-    await supabase.from('tasks').delete().eq('id', id)
+    const task = tasks.find(t => t.id === id)
+    const taskTitle = task?.title || 'tarefa'
+    
+    const { error } = await supabase.from('tasks').delete().eq('id', id)
+    
+    if (!error) {
+      logActivity({ userName: currentUser?.name, action: `excluiu a tarefa "${taskTitle}"` })
+    }
+    
     await fetchTasks()
   }
 
   async function moveTask(id, status) {
-    await supabase
+    const task = tasks.find(t => t.id === id)
+    const taskTitle = task?.title || 'tarefa'
+
+    const { error } = await supabase
       .from('tasks')
       .update({ status, updated_at: new Date() })
       .eq('id', id)
+    
+    if (!error) {
+      logActivity({ userName: currentUser?.name, action: `moveu "${taskTitle}" para ${status}`, newStatus: status })
+    }
+    
     await fetchTasks()
   }
 

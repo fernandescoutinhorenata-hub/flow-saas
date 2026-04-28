@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { logActivity } from '../lib/logActivity'
 
 export function useRegistros() {
+  const { currentUser } = useAuth()
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -32,6 +35,9 @@ export function useRegistros() {
       console.error('Erro ao criar ticket:', error)
       return
     }
+    
+    logActivity({ userName: currentUser?.name, action: `abriu um registro: "${ticket.title}"` })
+    
     await fetchTickets()
   }
 

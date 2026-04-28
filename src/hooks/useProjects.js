@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { logActivity } from '../lib/logActivity'
 
 export function useProjects() {
+  const { currentUser } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -27,6 +30,9 @@ export function useProjects() {
   }
 
   async function deleteProject(id) {
+    const project = projects.find(p => p.id === id)
+    const projectName = project?.name || 'projeto'
+
     const { error } = await supabase
       .from('projects')
       .delete()
@@ -35,6 +41,9 @@ export function useProjects() {
       console.error('Erro ao excluir projeto:', error)
       throw error
     }
+
+    logActivity({ userName: currentUser?.name, action: `excluiu o projeto "${projectName}"` })
+    
     await fetchProjects()
   }
 
@@ -52,6 +61,9 @@ export function useProjects() {
       console.error('Erro ao criar projeto:', error)
       return
     }
+
+    logActivity({ userName: currentUser?.name, action: `criou o projeto "${project.name}"` })
+
     await fetchProjects()
     return data
   }
