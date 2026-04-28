@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-export function useTasks(projectId) {
+export function useTasks() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!projectId) {
-      setLoading(false) // sair do loading mesmo sem projectId
-      return
-    }
     fetchTasks()
     const interval = setInterval(fetchTasks, 3000)
     return () => clearInterval(interval)
-  }, [projectId])
+  }, [])
 
   const fetchTasks = async () => {
-    if (!projectId) return // guard: nunca executar com projectId undefined
-    
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
-      .eq('project_id', projectId)
       .order('position', { ascending: true })
-    
+
     if (error) {
-      console.error('Erro detalhado:', JSON.stringify(error))
+      console.error('Erro:', JSON.stringify(error))
       return
     }
-    
     setTasks(data || [])
     setLoading(false)
   }
@@ -39,8 +31,7 @@ export function useTasks(projectId) {
       .insert([task])
       .select()
       .single()
-    
-    // Refetch imediato
+
     await fetchTasks()
 
     if (error) throw error
@@ -68,6 +59,5 @@ export function useTasks(projectId) {
     await fetchTasks()
   }
 
-  return { tasks, loading, createTask, 
-           updateTask, deleteTask, moveTask }
+  return { tasks, loading, createTask, updateTask, deleteTask, moveTask }
 }
