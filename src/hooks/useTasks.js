@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-export function useTasks() {
+export function useTasks(projectId) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!projectId) return
     fetchTasks()
     
     const interval = setInterval(() => {
@@ -13,14 +14,25 @@ export function useTasks() {
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [projectId])
 
-  async function fetchTasks() {
-    const { data } = await supabase
+  const fetchTasks = async () => {
+    console.log('fetchTasks chamado, projectId:', projectId)
+    
+    const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('project_id', projectId)
       .order('position')
-    if (data) setTasks(data)
+    
+    console.log('resultado:', data, 'erro:', error)
+    
+    if (error) {
+      console.error('Erro detalhado:', JSON.stringify(error))
+      return
+    }
+    
+    setTasks(data || [])
     setLoading(false)
   }
 
