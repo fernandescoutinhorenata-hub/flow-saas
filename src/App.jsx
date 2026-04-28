@@ -148,7 +148,6 @@ export default function App() {
     const newTicket = {
       ...data,
       author_id: currentUser?.id,
-      author_name: currentUser?.name,
       author_initials: currentUser?.initials,
       status: "aberto",
     };
