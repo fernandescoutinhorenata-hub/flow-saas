@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { logActivity } from '../lib/logActivity'
 
-export function useTasks() {
+export function useTasks(projectId = null) {
   const { currentUser } = useAuth()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -12,14 +12,20 @@ export function useTasks() {
     fetchTasks()
     const interval = setInterval(fetchTasks, 3000)
     return () => clearInterval(interval)
-  }, [])
+  }, [projectId])
 
   const fetchTasks = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select('*')
         .order('position', { ascending: true })
+
+      if (projectId) {
+        query = query.eq('project_id', projectId)
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Erro tasks:', error)
@@ -36,7 +42,7 @@ export function useTasks() {
   async function createTask(task) {
     const { data, error } = await supabase
       .from('tasks')
-      .insert([task])
+      .insert([{ ...task, project_id: projectId }])
       .select()
       .single()
 

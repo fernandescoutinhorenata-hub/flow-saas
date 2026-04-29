@@ -21,15 +21,18 @@ import { useAuth } from './context/AuthContext.jsx';
 import { useTasks } from './hooks/useTasks.js';
 import { useColumns } from './hooks/useColumns.js';
 import { useRegistros } from './hooks/useRegistros.js';
+import { useProjects } from './hooks/useProjects.js';
 export default function App() {
   const { user, profile, currentUser, loading: authLoading, hasPermission, signOut } = useAuth();
+  const { projects, selectedProject, setSelectedProject, createProject, deleteProject } = useProjects();
   
-  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks();
+  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
   const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
   
   const [activeModal, setActiveModal] = useState(null);
   const [showNewTask, setShowNewTask] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [filter, setFilter] = useState("all");
   const [dragState, setDragState] = useState({ dragId: null, overCol: null });
   const [toasts, setToasts] = useState([]);
@@ -236,13 +239,35 @@ export default function App() {
         </div>
 
         <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-          <button style={{
-            background: "var(--bg-surface)", border: "1px solid var(--border)",
-            borderRadius: 8, color: "var(--text-primary)", fontSize: 13, fontWeight: 500,
-            padding: "6px 14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-          }}>
-            Projeto Alpha ▾
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowProjectMenu(!showProjectMenu)}
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, padding: '6px 14px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 6 }}>
+              {selectedProject?.name || 'Selecionar projeto'} <span style={{ fontSize: 10, opacity: 0.5 }}>▾</span>
+            </button>
+            
+            {showProjectMenu && (
+              <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 8, background: 'var(--bg-modal)', border: '1px solid var(--border)', borderRadius: 12, minWidth: 200, zIndex: 2000, boxShadow: '0 10px 32px rgba(0,0,0,0.5)', padding: 6 }}>
+                {projects.length === 0 && (
+                  <div style={{ padding: '12px', fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>Nenhum projeto encontrado</div>
+                )}
+                {projects.map(p => (
+                  <div key={p.id} onClick={() => { setSelectedProject(p); setShowProjectMenu(false) }}
+                    className="dropdown-item"
+                    style={{ 
+                      padding: '10px 14px', cursor: 'pointer', fontSize: 13, borderRadius: 6,
+                      color: selectedProject?.id === p.id ? 'var(--accent)' : 'var(--text-primary)',
+                      background: selectedProject?.id === p.id ? 'var(--accent-soft)' : 'transparent',
+                      transition: 'all 0.15s'
+                    }}
+                    onMouseOver={e => { if (selectedProject?.id !== p.id) e.currentTarget.style.background = 'var(--bg-surface)' }}
+                    onMouseOut={e => { if (selectedProject?.id !== p.id) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    {p.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
