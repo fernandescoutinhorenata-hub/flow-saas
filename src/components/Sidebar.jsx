@@ -1,17 +1,27 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Avatar from './Avatar.jsx';
+import { 
+  LayoutDashboard, 
+  Kanban, 
+  Package, 
+  Clock, 
+  ClipboardList, 
+  BarChart3, 
+  Settings as SettingsIcon 
+} from 'lucide-react';
 
 export default function Sidebar({ collapsed, activeNav, setActiveNav }) {
   const { currentUser } = useAuth();
   
   const items = [
-    { id: "home",     icon: "⬡", label: "Dashboard" },
-    { id: "board",    icon: "▦", label: "Quadro" },
-    { id: "timeline", icon: "▤", label: "Timeline" },
-    { id: "registros", icon: "📋", label: "Registros" },
-    { id: "reports",  icon: "◈", label: "Relatórios" },
-    { id: "settings", icon: "⚙", label: "Config." },
+    { view: "home",      icon: <LayoutDashboard size={18} />, label: "Dashboard" },
+    { view: "board",     icon: <Kanban size={18} />,          label: "Quadro" },
+    { view: "producao",  icon: <Package size={18} />,         label: "Produção" },
+    { view: "timeline",  icon: <Clock size={18} />,           label: "Timeline" },
+    { view: "registros", icon: <ClipboardList size={18} />,   label: "Registros" },
+    { view: "reports",   icon: <BarChart3 size={18} />,       label: "Relatórios" },
+    { view: "settings",  icon: <SettingsIcon size={18} />,    label: "Config." },
   ];
 
   return (
@@ -24,11 +34,11 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav }) {
     }}>
       <div style={{ flex: 1 }}>
         {(items || []).map(item => {
-          const active = activeNav === item.id;
+          const active = activeNav === item.view;
           return (
             <div
-              key={item.id}
-              onClick={() => setActiveNav(item.id)}
+              key={item.view}
+              onClick={() => setActiveNav(item.view)}
               style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "10px 12px",
@@ -41,7 +51,9 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav }) {
               onMouseOver={e => { if (!active) e.currentTarget.style.background = "var(--bg-surface)"; }}
               onMouseOut={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
             >
-              <span style={{ fontSize: 15, color: active ? "var(--accent)" : "var(--text-secondary)", flexShrink: 0, width: 18, textAlign: "center" }}>{item.icon}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, color: active ? "var(--accent)" : "var(--text-secondary)" }}>
+                {item.icon}
+              </div>
               {!collapsed && <span style={{ fontSize: 13, color: active ? "var(--accent)" : "var(--text-secondary)", fontWeight: active ? 500 : 400, whiteSpace: "nowrap" }}>{item.label}</span>}
             </div>
           );
