@@ -509,7 +509,7 @@ export default function Settings({
                   disabled={isCreating}
                   style={{ flex: 1, background: "#00FF87", color: "#0D0D0D", border: "none", padding: "12px", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}
                 >
-                  {isCreating ? "Criando..." : "Criar Projeto"}
+                  {isCreating ? (editingProject ? "Salvando..." : "Criando...") : (editingProject ? "Atualizar Projeto" : "Criar Projeto")}
                 </button>
                 <button 
                   type="button"
