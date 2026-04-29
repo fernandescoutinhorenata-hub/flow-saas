@@ -40,8 +40,10 @@ export default function App() {
   const [dragState, setDragState] = useState({ dragId: null, overCol: null });
   const [toasts, setToasts] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("board");
   const [confirmDeleteCol, setConfirmDeleteCol] = useState(null);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const toastTimer = useRef({});
 
 
@@ -230,8 +232,9 @@ export default function App() {
         display: "flex", alignItems: "center", padding: "0 20px",
         gap: 16, flexShrink: 0, zIndex: 100,
       }}>
+        {/* Botão hamburguer: desktop colapsa sidebar, mobile abre overlay */}
         <button
-          onClick={() => setSidebarCollapsed(p => !p)}
+          onClick={() => isMobile ? setMobileOpen(p => !p) : setSidebarCollapsed(p => !p)}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: 16, padding: "6px", borderRadius: 6, transition: "color 0.15s, background 0.15s" }}
           onMouseOver={e => { e.currentTarget.style.color = "var(--text-primary)"; e.currentTarget.style.background = "var(--bg-surface)"; }}
           onMouseOut={e => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "transparent"; }}
@@ -281,8 +284,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: "flex", gap: 2 }}>
+        {/* Filters — ocultos no mobile via CSS */}
+        <div className="header-filters" style={{ display: "flex", gap: 2 }}>
           {([{ key: "all", label: "Todas" }, { key: "mine", label: "Minhas" }, { key: "overdue", label: "Atrasadas" }] || []).map(f => (
             <button
               key={f.key}
@@ -304,12 +307,13 @@ export default function App() {
             background: "transparent", border: "1px solid var(--accent)", borderRadius: 8,
             color: "var(--accent)", fontSize: 13, fontWeight: 500, padding: "7px 14px",
             cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "background 0.15s",
-            display: "flex", alignItems: "center", gap: 6,
+            display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
           }}
           onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"}
           onMouseOut={e => e.currentTarget.style.background = "transparent"}
         >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nova Tarefa
+          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+          <span className="header-new-task-label">Nova Tarefa</span>
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -336,10 +340,16 @@ export default function App() {
 
       {/* Body */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <Sidebar collapsed={sidebarCollapsed} activeNav={activeNav} setActiveNav={setActiveNav} />
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          activeNav={activeNav}
+          setActiveNav={setActiveNav}
+          mobileOpen={mobileOpen}
+          setMobileOpen={setMobileOpen}
+        />
 
         {activeNav === "board" && (
-          <main style={{
+          <main className="kanban-board" style={{
             flex: 1, overflowX: "auto", overflowY: "hidden",
             padding: "20px 24px",
             display: "flex", gap: 16, alignItems: "flex-start",

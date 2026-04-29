@@ -45,9 +45,9 @@ export default function Producao({ selectedProject, addToast }) {
       </div>
 
       {/* Kanban */}
-      <div style={{ display: 'flex', gap: 16, padding: 24, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
+      <div className="producao-board" style={{ display: 'flex', gap: 16, padding: 24, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
         {columns.map(col => (
-          <div key={col.id} style={{ minWidth: 300, width: 300, background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border)', padding: 16 }}>
+          <div key={col.id} className="producao-col" style={{ minWidth: 300, width: 300, background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border)', padding: 16 }}>
             
             {/* Column header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

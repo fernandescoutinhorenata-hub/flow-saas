@@ -52,6 +52,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      className="modal-bottom-sheet"
       style={{
         position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
         backdropFilter: "blur(4px)", zIndex: 1000,
@@ -118,9 +119,9 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
         </div>
 
         {/* Modal body */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div className="task-modal-body" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {/* Left column */}
-          <div style={{ flex: "0 0 60%", padding: "20px 16px 20px 28px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="task-modal-left" style={{ flex: "0 0 60%", padding: "20px 16px 20px 28px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Description */}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Descrição</label>
@@ -197,7 +198,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
           </div>
 
           {/* Right column */}
-          <div style={{ flex: "0 0 40%", padding: "20px 28px 20px 16px", borderLeft: "1px solid var(--border)", overflowY: "auto", display: "flex", flexDirection: "column", gap: 18 }}>
+          <div className="task-modal-right" style={{ flex: "0 0 40%", padding: "20px 28px 20px 16px", borderLeft: "1px solid var(--border)", overflowY: "auto", display: "flex", flexDirection: "column", gap: 18 }}>
             {/* Assignee */}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Responsável</label>

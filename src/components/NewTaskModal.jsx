@@ -15,6 +15,7 @@ export default function NewTaskModal({ onClose, onCreate, columns }) {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      className="modal-bottom-sheet"
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
     >
       <div className="anim-scaleIn" style={{
