@@ -22,6 +22,7 @@ import { useTasks } from './hooks/useTasks.js';
 import { useColumns } from './hooks/useColumns.js';
 import { useRegistros } from './hooks/useRegistros.js';
 import { useProjects } from './hooks/useProjects.js';
+import { useUsers } from './hooks/useUsers.js';
 export default function App() {
   const { user, profile, currentUser, loading: authLoading, hasPermission, signOut } = useAuth();
   const { projects, selectedProject, setSelectedProject, createProject, updateProject, deleteProject, addMember, removeMember, loading: projectsLoading } = useProjects(currentUser);

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useUsers } from '../hooks/useUsers.js';
 import { useProjects } from '../hooks/useProjects.js';
 
 export default function Settings({ 
