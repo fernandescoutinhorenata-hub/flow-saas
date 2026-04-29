@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 
 export function useColumns() {
   const [columns, setColumns] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchColumns()
@@ -15,11 +16,17 @@ export function useColumns() {
   }, [])
 
   async function fetchColumns() {
-    const { data } = await supabase
-      .from('columns')
-      .select('*')
-      .order('position')
-    if (data) setColumns(data)
+    try {
+      const { data } = await supabase
+        .from('columns')
+        .select('*')
+        .order('position')
+      if (data) setColumns(data)
+    } catch (err) {
+      console.error('Erro colunas:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function addColumn(label) {
@@ -51,5 +58,5 @@ export function useColumns() {
     await fetchColumns()
   }
 
-  return { columns, addColumn, removeColumn, renameColumn }
+  return { columns, loading, addColumn, removeColumn, renameColumn }
 }

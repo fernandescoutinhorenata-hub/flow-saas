@@ -5,8 +5,8 @@ import { useAuth } from '../hooks/useAuth.js';
 import { useUsers } from '../hooks/useUsers.js';
 import { useProjects } from '../hooks/useProjects.js';
 
-export default function Settings({ currentUser, hasPermission, addToast }) {
-  const { inviteMember } = useAuth();
+export default function Settings({ hasPermission, addToast }) {
+  const { currentUser, inviteMember } = useAuth();
   const { users, loading: usersLoading, toggleUserActive } = useUsers();
   const { projects, loading: projectsLoading, deleteProject, createProject } = useProjects();
   
@@ -121,7 +121,7 @@ export default function Settings({ currentUser, hasPermission, addToast }) {
                 </div>
                 <div>
                   <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 600 }}>E-mail</label>
-                  <input type="email" defaultValue={currentUser?.email || "voce@flow.com"} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
+                  <input type="email" defaultValue={currentUser?.email || ''} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
                 </div>
               </div>
               <button style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 500, alignSelf: "flex-start", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-dark)"} onMouseOut={e => e.currentTarget.style.background = "var(--accent)"}>Salvar Alterações</button>
