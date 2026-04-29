@@ -5,10 +5,19 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useUsers } from '../hooks/useUsers.js';
 import { useProjects } from '../hooks/useProjects.js';
 
-export default function Settings({ hasPermission, addToast }) {
+export default function Settings({ 
+  hasPermission, 
+  addToast, 
+  projects, 
+  projectsLoading, 
+  createProject, 
+  updateProject, 
+  deleteProject, 
+  addMember, 
+  removeMember,
+  users 
+}) {
   const { currentUser, inviteMember } = useAuth();
-  const { users, loading: usersLoading, toggleUserActive } = useUsers();
-  const { projects, loading: projectsLoading, deleteProject, createProject } = useProjects();
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -34,7 +43,9 @@ export default function Settings({ hasPermission, addToast }) {
 
   // Project states
   const [showNewProject, setShowNewProject] = useState(false);
-  const [newProjectData, setNewProjectData] = useState({ name: '', description: '', deadline: '' });
+  const [newProjectData, setNewProjectData] = useState({ name: '', description: '', fase: 'planejamento' });
+  const [editingProject, setEditingProject] = useState(null);
+  const [showMemberAdd, setShowMemberAdd] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,12 +76,18 @@ export default function Settings({ hasPermission, addToast }) {
     
     setIsCreating(true);
     try {
-      await createProject(newProjectData);
-      addToast("✅ Projeto criado com sucesso!");
+      if (editingProject) {
+        await updateProject(editingProject.id, newProjectData);
+        addToast("✅ Projeto atualizado!");
+      } else {
+        await createProject(newProjectData);
+        addToast("✅ Projeto criado!");
+      }
       setShowNewProject(false);
-      setNewProjectData({ name: '', description: '', deadline: '' });
+      setEditingProject(null);
+      setNewProjectData({ name: '', description: '', fase: 'planejamento' });
     } catch (err) {
-      addToast("❌ Erro ao criar projeto.");
+      addToast("❌ Erro ao salvar projeto.");
     } finally {
       setIsCreating(false);
     }
@@ -163,29 +180,110 @@ export default function Settings({ hasPermission, addToast }) {
                 ) : projects.length === 0 ? (
                   <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Nenhum projeto encontrado.</div>
                 ) : projects.map((p) => (
-                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)" }}>
-                    <div>
-                      <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500, marginBottom: 4 }}>{p.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.status || "Ativo"} • Criado: {new Date(p.created_at).toLocaleDateString("pt-BR")}</div>
+                  <div key={p.id} style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20, border: "1px solid var(--border)", borderRadius: 12, background: "var(--bg-card)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: 15, color: "var(--text-primary)", fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-secondary)", display: 'flex', gap: 12 }}>
+                          <span style={{ color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase' }}>{p.fase}</span>
+                          <span>•</span>
+                          <span>Criado: {new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <button 
+                          onClick={() => {
+                            setEditingProject(p);
+                            setNewProjectData({ name: p.name, description: p.description || '', fase: p.fase || 'planejamento' });
+                            setShowNewProject(true);
+                          }}
+                          style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "background 0.2s" }} 
+                          onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>Editar</button>
+                        <span style={{ color: "#3A3A3A" }}>|</span>
+                        <button 
+                          onClick={() => setConfirmDeleteProject(p)}
+                          style={{ background: "none", border: "none", color: "#FF4C4C", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "all 0.2s" }} 
+                          onMouseOver={e => {
+                            e.currentTarget.style.background = "#FF4C4C10";
+                            e.currentTarget.style.color = "#FF6B6B";
+                          }} 
+                          onMouseOut={e => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.color = "#FF4C4C";
+                          }}
+                        >
+                          Excluir
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>Arquivar</button>
-                      <span style={{ color: "#3A3A3A" }}>|</span>
-                      <button 
-                        onClick={() => setConfirmDeleteProject(p)}
-                        style={{ background: "none", border: "none", color: "#FF4C4C", fontSize: 13, cursor: "pointer", padding: "4px 8px", borderRadius: 4, transition: "all 0.2s" }} 
-                        onMouseOver={e => {
-                          e.currentTarget.style.background = "#FF4C4C10";
-                          e.currentTarget.style.color = "#FF6B6B";
-                        }} 
-                        onMouseOut={e => {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.color = "#FF4C4C";
-                        }}
-                      >
-                        Excluir
-                      </button>
-                    </div>
+
+                    {/* Membros do Projeto */}
+                    {currentUser?.role === 'dono' && (
+                      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                          <span style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600 }}>Membros do Projeto</span>
+                          <button 
+                            onClick={() => setShowMemberAdd(showMemberAdd === p.id ? null : p.id)}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}
+                          >
+                            {showMemberAdd === p.id ? 'Fechar' : '+ Adicionar'}
+                          </button>
+                        </div>
+
+                        {showMemberAdd === p.id && (
+                          <div style={{ background: 'var(--bg-base)', padding: 8, borderRadius: 8, marginBottom: 12, display: 'flex', gap: 8 }}>
+                            <select 
+                              id={`select-member-${p.id}`}
+                              style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '4px 8px', fontSize: 13 }}
+                            >
+                              <option value="">Selecionar usuário...</option>
+                              {users.filter(u => !p.project_members?.some(m => m.user_id === u.id)).map(u => (
+                                <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                              ))}
+                            </select>
+                            <button 
+                              onClick={async () => {
+                                const select = document.getElementById(`select-member-${p.id}`);
+                                const userId = select.value;
+                                if (!userId) return;
+                                try {
+                                  await addMember(p.id, userId);
+                                  addToast("✅ Membro adicionado ao projeto!");
+                                  setShowMemberAdd(null);
+                                } catch (err) {
+                                  addToast("❌ Erro ao adicionar membro.");
+                                }
+                              }}
+                              style={{ background: 'var(--accent)', border: 'none', color: '#0D0D0D', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                            >
+                              Add
+                            </button>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                          {p.project_members?.length === 0 && (
+                            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontStyle: 'italic' }}>Nenhum membro atribuído</span>
+                          )}
+                          {p.project_members?.map(m => {
+                            const user = users.find(u => u.id === m.user_id);
+                            if (!user) return null;
+                            return (
+                              <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-base)', padding: '4px 8px', borderRadius: 20, border: '1px solid var(--border)' }}>
+                                <Avatar initials={user.initials} size={18} />
+                                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{user.name}</span>
+                                <button 
+                                  onClick={() => removeMember(p.id, user.id)}
+                                  style={{ background: 'none', border: 'none', color: '#FF4C4C', fontSize: 14, cursor: 'pointer', padding: '0 2px', display: 'flex', alignItems: 'center' }}
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -245,7 +343,7 @@ export default function Settings({ hasPermission, addToast }) {
                 </form>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {usersLoading ? (
+                {!users ? (
                   <div style={{ color:'var(--text-secondary)', 
                     fontSize:13 }}>Carregando membros...</div>
                 ) : users.length === 0 ? (
@@ -359,8 +457,10 @@ export default function Settings({ hasPermission, addToast }) {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000, padding: 20 }}>
           <div className="anim-scaleIn" style={{ background: "#242424", width: "100%", maxWidth: 440, borderRadius: 16, border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(0,0,0,0.7)", overflow: "hidden" }}>
             <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'DM Sans', sans-serif" }}>Novo Projeto</h3>
-              <button onClick={() => setShowNewProject(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 24, cursor: "pointer" }}>&times;</button>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'DM Sans', sans-serif" }}>
+                {editingProject ? 'Editar Projeto' : 'Novo Projeto'}
+              </h3>
+              <button onClick={() => { setShowNewProject(false); setEditingProject(null); }} style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 24, cursor: "pointer" }}>&times;</button>
             </div>
             
             <form onSubmit={handleCreateProject} style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
@@ -391,15 +491,17 @@ export default function Settings({ hasPermission, addToast }) {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>Data de entrega</label>
-                <input 
-                  type="date"
-                  value={newProjectData.deadline}
-                  onChange={e => setNewProjectData({...newProjectData, deadline: e.target.value})}
+                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>Fase do projeto</label>
+                <select 
+                  value={newProjectData.fase}
+                  onChange={e => setNewProjectData({...newProjectData, fase: e.target.value})}
                   style={{ width: "100%", background: "#161616", border: "1px solid #2A2A2A", padding: "12px 14px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}
-                  onFocus={e => e.target.style.borderColor = "#00FF87"}
-                  onBlur={e => e.target.style.borderColor = "#2A2A2A"}
-                />
+                >
+                  <option value="planejamento">Planejamento</option>
+                  <option value="execução">Execução</option>
+                  <option value="revisão">Revisão</option>
+                  <option value="concluído">Concluído</option>
+                </select>
               </div>
 
               <div style={{ display: "flex", gap: 12, marginTop: 12 }}>

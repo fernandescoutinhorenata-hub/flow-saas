@@ -24,7 +24,8 @@ import { useRegistros } from './hooks/useRegistros.js';
 import { useProjects } from './hooks/useProjects.js';
 export default function App() {
   const { user, profile, currentUser, loading: authLoading, hasPermission, signOut } = useAuth();
-  const { projects, selectedProject, setSelectedProject, createProject, deleteProject } = useProjects();
+  const { projects, selectedProject, setSelectedProject, createProject, updateProject, deleteProject, addMember, removeMember, loading: projectsLoading } = useProjects(currentUser);
+  const { users, toggleUserActive } = useUsers();
   
   const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
@@ -241,8 +242,14 @@ export default function App() {
         <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
           <div style={{ position: 'relative' }}>
             <button onClick={() => setShowProjectMenu(!showProjectMenu)}
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, padding: '6px 14px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 6 }}>
-              {selectedProject?.name || 'Selecionar projeto'} <span style={{ fontSize: 10, opacity: 0.5 }}>▾</span>
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, padding: '6px 14px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{selectedProject?.name || 'Selecionar projeto'}</div>
+                {selectedProject && (
+                  <div style={{ fontSize: 10, color: 'var(--accent)', textTransform: 'uppercase', fontWeight: 700, marginTop: -2 }}>{selectedProject.fase}</div>
+                )}
+              </div>
+              <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 4 }}>▾</span>
             </button>
             
             {showProjectMenu && (
@@ -257,12 +264,14 @@ export default function App() {
                       padding: '10px 14px', cursor: 'pointer', fontSize: 13, borderRadius: 6,
                       color: selectedProject?.id === p.id ? 'var(--accent)' : 'var(--text-primary)',
                       background: selectedProject?.id === p.id ? 'var(--accent-soft)' : 'transparent',
-                      transition: 'all 0.15s'
+                      transition: 'all 0.15s',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                     }}
                     onMouseOver={e => { if (selectedProject?.id !== p.id) e.currentTarget.style.background = 'var(--bg-surface)' }}
                     onMouseOut={e => { if (selectedProject?.id !== p.id) e.currentTarget.style.background = 'transparent' }}
                   >
-                    {p.name}
+                    <span>{p.name}</span>
+                    <span style={{ fontSize: 9, textTransform: 'uppercase', opacity: 0.5 }}>{p.fase}</span>
                   </div>
                 ))}
               </div>
@@ -386,7 +395,19 @@ export default function App() {
 
         {activeNav === "settings" && (
           <ErrorBoundary>
-            <Settings currentUser={currentUser} hasPermission={hasPermission} addToast={addToast} />
+            <Settings 
+              currentUser={currentUser} 
+              hasPermission={hasPermission} 
+              addToast={addToast}
+              projects={projects}
+              projectsLoading={projectsLoading}
+              createProject={createProject}
+              updateProject={updateProject}
+              deleteProject={deleteProject}
+              addMember={addMember}
+              removeMember={removeMember}
+              users={users}
+            />
           </ErrorBoundary>
         )}
       </div>
