@@ -13,6 +13,7 @@ import Registros from './views/Registros.jsx';
 import Dashboard from './views/Dashboard.jsx';
 import Timeline from './views/Timeline.jsx';
 import Reports from './views/Reports.jsx';
+import Producao from './views/Producao.jsx';
 import Settings from './views/Settings.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NewColumnButton from './components/NewColumnGhost.jsx';
@@ -372,44 +373,62 @@ export default function App() {
         )}
 
         {activeNav === "registros" && (
-          <Registros
-            tickets={tickets}
-            onUpdateStatus={handleUpdateTicketStatus}
-            onCreate={handleCreateTicket}
-            onRespond={handleRespondTicket}
-            onDelete={handleDeleteTicket}
-            currentUser={currentUser}
-          />
+          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <Registros
+              tickets={tickets}
+              onUpdateStatus={handleUpdateTicketStatus}
+              onCreate={handleCreateTicket}
+              onRespond={handleRespondTicket}
+              onDelete={handleDeleteTicket}
+              currentUser={currentUser}
+            />
+          </main>
         )}
         
         {activeNav === "home" && (
-          <Dashboard tasks={tasks} onTaskClick={handleCardClick} />
+          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <Dashboard tasks={tasks} onTaskClick={handleCardClick} />
+          </main>
+        )}
+
+        {activeNav === "producao" && (
+          <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <ErrorBoundary>
+              <Producao selectedProject={selectedProject} addToast={addToast} />
+            </ErrorBoundary>
+          </main>
         )}
 
         {activeNav === "timeline" && (
-          <Timeline />
+          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <Timeline />
+          </main>
         )}
 
         {activeNav === "reports" && (
-          <Reports tasks={tasks} />
+          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <Reports tasks={tasks} />
+          </main>
         )}
 
         {activeNav === "settings" && (
-          <ErrorBoundary>
-            <Settings 
-              currentUser={currentUser} 
-              hasPermission={hasPermission} 
-              addToast={addToast}
-              projects={projects}
-              projectsLoading={projectsLoading}
-              createProject={createProject}
-              updateProject={updateProject}
-              deleteProject={deleteProject}
-              addMember={addMember}
-              removeMember={removeMember}
-              users={users}
-            />
-          </ErrorBoundary>
+          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <ErrorBoundary>
+              <Settings 
+                currentUser={currentUser} 
+                hasPermission={hasPermission} 
+                addToast={addToast}
+                projects={projects}
+                projectsLoading={projectsLoading}
+                createProject={createProject}
+                updateProject={updateProject}
+                deleteProject={deleteProject}
+                addMember={addMember}
+                removeMember={removeMember}
+                users={users}
+              />
+            </ErrorBoundary>
+          </main>
         )}
       </div>
 
