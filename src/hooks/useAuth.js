@@ -79,22 +79,10 @@ export function useAuth() {
     }
   }
 
-  async function signIn(email) {
-    const { error } = await supabase.auth.signInWithOtp({
+  async function signIn(email, password) {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: undefined
-      }
-    })
-    if (error) throw error
-  }
-
-  async function verifyOtp(email, token) {
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email'
+      password
     })
     if (error) throw error
   }
@@ -144,7 +132,6 @@ export function useAuth() {
     currentUser: profile, // Alias para compatibilidade
     loading, 
     signIn, 
-    verifyOtp,
     signOut, 
     inviteMember,
     hasPermission 

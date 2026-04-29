@@ -1,58 +1,27 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Login() {
-  const { signIn, verifyOtp } = useAuth()
+  const { signIn } = useAuth()
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState('email') // 'email' ou 'otp'
-  const [countdown, setCountdown] = useState(0)
 
-  useEffect(() => {
-    let timer
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-    }
-    return () => clearTimeout(timer)
-  }, [countdown])
-
-  async function handleSendOtp(e) {
+  async function handleSubmit(e) {
     if (e) e.preventDefault()
-    if (!email) {
-      setError('Por favor, insira seu email.')
+    if (!email || !password) {
+      setError('Preencha todos os campos.')
       return
     }
     
     setLoading(true)
     setError('')
     try {
-      await signIn(email)
-      setStep('otp')
-      setCountdown(60)
+      await signIn(email, password)
     } catch (err) {
       console.error(err)
-      setError('Erro ao enviar código. Tente novamente.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleVerifyOtp(e) {
-    if (e) e.preventDefault()
-    if (!otp || otp.length < 6) {
-      setError('Por favor, insira o código de 6 dígitos.')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    try {
-      await verifyOtp(email, otp)
-    } catch (err) {
-      console.error(err)
-      setError('Código inválido ou expirado.')
+      setError('Credenciais inválidas. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -79,50 +48,46 @@ export default function Login() {
         <p style={{ textAlign:'center', 
           color:'var(--text-secondary)', 
           fontSize:13, marginBottom:36 }}>
-          {step === 'email' ? 'Gestão simples. Execução precisa.' : 'Verificação de segurança'}
+          Gestão simples. Execução precisa.
         </p>
 
-        <form onSubmit={step === 'email' ? handleSendOtp : handleVerifyOtp}>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        <form onSubmit={handleSubmit}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             
-            {step === 'email' ? (
-              <div style={{ marginBottom: 4 }}>
-                <label style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, display: 'block' }}>Email corporativo</label>
-                <input type="email" placeholder="seu@email.com"
-                  value={email} onChange={e => setEmail(e.target.value)}
-                  style={{ width:'100%', padding:'12px 14px',
-                    background:'var(--bg-surface)',
-                    border:'1px solid var(--border)',
-                    borderRadius:8, color:'var(--text-primary)',
-                    fontSize:14, outline:'none',
-                    fontFamily:"'DM Sans', sans-serif" }}
-                  onFocus={e => e.target.style.borderColor='#00FF8760'}
-                  onBlur={e => e.target.style.borderColor='var(--border)'}
-                />
-              </div>
-            ) : (
-              <div style={{ marginBottom: 4 }}>
-                <label style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, display: 'block' }}>Código recebido no email</label>
-                <input type="text" placeholder="000000" maxLength={6}
-                  value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                  style={{ width:'100%', padding:'12px 14px',
-                    background:'var(--bg-surface)',
-                    border:'1px solid var(--border)',
-                    borderRadius:8, color:'var(--text-primary)',
-                    fontSize:24, letterSpacing: '8px', textAlign: 'center', outline:'none',
-                    fontFamily:"'Syne', sans-serif", fontWeight: 700 }}
-                  onFocus={e => e.target.style.borderColor='#00FF8760'}
-                  onBlur={e => e.target.style.borderColor='var(--border)'}
-                  autoFocus
-                />
-                <p style={{ color:'var(--text-disabled)', fontSize:11, marginTop: 12, textAlign: 'center' }}>
-                  Enviamos um código para <strong>{email}</strong>
-                </p>
-              </div>
-            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>Email corporativo</label>
+              <input type="email" placeholder="seu@email.com"
+                value={email} onChange={e => setEmail(e.target.value)}
+                style={{ width:'100%', padding:'12px 14px',
+                  background:'var(--bg-surface)',
+                  border:'1px solid var(--border)',
+                  borderRadius:8, color:'var(--text-primary)',
+                  fontSize:14, outline:'none',
+                  fontFamily:"'DM Sans', sans-serif",
+                  transition: 'border-color 0.2s' }}
+                onFocus={e => e.target.style.borderColor='#00FF8760'}
+                onBlur={e => e.target.style.borderColor='var(--border)'}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>Senha</label>
+              <input type="password" placeholder="••••••••"
+                value={password} onChange={e => setPassword(e.target.value)}
+                style={{ width:'100%', padding:'12px 14px',
+                  background:'var(--bg-surface)',
+                  border:'1px solid var(--border)',
+                  borderRadius:8, color:'var(--text-primary)',
+                  fontSize:14, outline:'none',
+                  fontFamily:"'DM Sans', sans-serif",
+                  transition: 'border-color 0.2s' }}
+                onFocus={e => e.target.style.borderColor='#00FF8760'}
+                onBlur={e => e.target.style.borderColor='var(--border)'}
+              />
+            </div>
             
             {error && (
-              <p style={{ color:'#FF4C4C', fontSize:12, textAlign:'center' }}>{error}</p>
+              <p style={{ color:'#FF4C4C', fontSize:12, textAlign:'center', margin: '4px 0' }}>{error}</p>
             )}
 
             <button type="submit" disabled={loading}
@@ -132,34 +97,14 @@ export default function Login() {
                 color:'#0D0D0D',
                 fontFamily:"'DM Sans', sans-serif",
                 fontWeight:600, fontSize:14, cursor:'pointer',
-                transition:'background 0.2s', marginTop: 8 }}>
-              {loading ? (step === 'email' ? 'Enviando...' : 'Verificando...') : (step === 'email' ? 'Entrar com Email' : 'Verificar Código')}
+                transition:'all 0.2s', marginTop: 8 }}>
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
-
-            {step === 'otp' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-                <button 
-                  type="button"
-                  onClick={handleSendOtp} 
-                  disabled={loading || countdown > 0}
-                  style={{ background: 'none', border: 'none', color: countdown > 0 ? 'var(--text-disabled)' : 'var(--text-secondary)', fontSize: 12, cursor: countdown > 0 ? 'default' : 'pointer' }}
-                >
-                  {countdown > 0 ? `Reenviar código em ${countdown}s` : 'Reenviar código'}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => { setStep('email'); setOtp(''); setError(''); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer' }}
-                >
-                  Alterar email
-                </button>
-              </div>
-            )}
           </div>
         </form>
 
-        <p style={{ textAlign:'center', marginTop:24, fontSize:11, color:'var(--text-disabled)' }}>
-          Acesso restrito à equipe.
+        <p style={{ textAlign:'center', marginTop:32, fontSize:11, color:'var(--text-disabled)' }}>
+          Acesso restrito à equipe Flow.
         </p>
       </div>
     </div>
