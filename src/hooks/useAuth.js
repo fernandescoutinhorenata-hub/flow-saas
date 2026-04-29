@@ -6,29 +6,16 @@ export function useAuth() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
+    // Timeout absoluto de segurança para evitar loading infinito
     const timeout = setTimeout(() => {
       setLoading(false)
-    }, 5000)
+      setInitialized(true)
+    }, 3000)
 
-    const init = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          await fetchProfile(session.user.email)
-        }
-      } catch (err) {
-        console.error('Auth error:', err)
-      } finally {
-        clearTimeout(timeout)
-        setLoading(false)
-      }
-    }
-
-    init()
-
+    // O onAuthStateChange dispara automaticamente o evento INITIAL_SESSION no mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setUser(session?.user ?? null)
@@ -38,8 +25,11 @@ export function useAuth() {
           setProfile(null)
           setLoading(false)
         }
+        setInitialized(true)
+        clearTimeout(timeout)
       }
     )
+
     return () => {
       clearTimeout(timeout)
       subscription.unsubscribe()
@@ -127,7 +117,7 @@ export function useAuth() {
     user, 
     profile, 
     currentUser: profile, // Alias para compatibilidade
-    loading, 
+    loading: !initialized || loading, 
     signIn, 
     signOut, 
     inviteMember,
