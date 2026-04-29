@@ -45,13 +45,7 @@ export default function OwnerPanel() {
         active: true
       }])
       
-      // Cria no Auth com senha = email (temporária)
-      await supabase.auth.signUp({
-        email: form.email,
-        password: form.email,
-        options: { data: { name: form.name } }
-      })
-
+      // Toast de sucesso após insert no banco
       setToastMsg('✅ Usuário cadastrado!')
       setForm({ name:'', email:'', 
                 role:'membro', cargo:'' })
