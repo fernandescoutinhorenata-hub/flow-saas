@@ -205,14 +205,6 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
                 {isAvailable ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <span style={{ fontSize: 13, color: "var(--text-disabled)", fontStyle: "italic" }}>Sem responsável</span>
-                    <button
-                      onClick={() => onAccept(task.id)}
-                      style={{
-                        background: "var(--accent)", color: "#0D0D0D", border: "none",
-                        borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600,
-                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                      }}
-                    >Aceitar tarefa →</button>
                   </div>
                 ) : (
                   <>

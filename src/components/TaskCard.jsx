@@ -90,16 +90,7 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
           <span style={{ fontSize: 10, color: "#7A7A7A", fontWeight: 500, marginRight: 8 }}>Aceito por você</span>
         )}
 
-        {isAvailable && hovered && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onAccept(task.id); }}
-            style={{
-              background: "var(--accent)", color: "#0D0D0D", border: "none",
-              borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 500,
-              cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-            }}
-          >Aceitar tarefa →</button>
-        )}
+
 
         <span style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 3 }}>
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
