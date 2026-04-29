@@ -30,10 +30,11 @@ export function useAuth() {
     init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setUser(session?.user ?? null)
-        if (session?.user) fetchProfile(session.user.email)
-        else {
+        if (session?.user) {
+          await fetchProfile(session.user.email)
+        } else {
           setProfile(null)
           setLoading(false)
         }
@@ -82,7 +83,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: 'https://flow-saas-beta.vercel.app'
       }
     })
     if (error) throw error
