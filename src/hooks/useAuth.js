@@ -117,7 +117,7 @@ export function useAuth() {
     user, 
     profile, 
     currentUser: profile, // Alias para compatibilidade
-    loading: !initialized || loading, 
+    loading, 
     signIn, 
     signOut, 
     inviteMember,
