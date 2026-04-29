@@ -199,6 +199,21 @@ export default function App() {
 
   if (!user) return <Login />;
 
+  // Novo guard para garantir que o perfil carregou antes de renderizar o app
+  if (user && !currentUser) {
+    return (
+      <div style={{ 
+        display: 'flex', alignItems: 'center', 
+        justifyContent: 'center', height: '100vh', 
+        background: 'var(--bg-base)', color: 'var(--accent)', 
+        fontFamily: "'Syne', sans-serif", fontSize: 24, gap: 12 
+      }}>
+        <span className="anim-pulse">FLOW</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>carregando perfil...</span>
+      </div>
+    );
+  }
+
 
 
   return (

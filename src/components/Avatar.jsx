@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Avatar({ initials, size = 24, color = "#00FF87" }) {
+export default function Avatar({ initials = "?", size = 24, color = "#00FF87" }) {
   const safeInitials = initials || "?";
   const hue = safeInitials.charCodeAt(0) % 360;
   const bg = `oklch(0.35 0.08 ${hue})`;
