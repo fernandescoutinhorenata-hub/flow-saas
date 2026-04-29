@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../hooks/useAuth.js';
@@ -14,6 +14,18 @@ export default function Settings({ hasPermission, addToast }) {
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
   const [compact, setCompact] = useState(false);
   const [density, setDensity] = useState("Confortável");
+
+  // Estados de perfil controlados
+  const [name, setName] = useState(currentUser?.name || '')
+  const [email, setEmail] = useState(currentUser?.email || '')
+
+  // Sincroniza quando currentUser carrega de forma assíncrona
+  useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.name || '')
+      setEmail(currentUser.email || '')
+    }
+  }, [currentUser])
   
   // Invite state
   const [showInvite, setShowInvite] = useState(false);
@@ -117,11 +129,11 @@ export default function Settings({ hasPermission, addToast }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
                   <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 600 }}>Nome Completo</label>
-                  <input type="text" defaultValue={currentUser?.name || ''} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 600 }}>E-mail</label>
-                  <input type="email" defaultValue={currentUser?.email || ''} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
                 </div>
               </div>
               <button style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 500, alignSelf: "flex-start", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-dark)"} onMouseOut={e => e.currentTarget.style.background = "var(--accent)"}>Salvar Alterações</button>
