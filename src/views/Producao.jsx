@@ -4,123 +4,85 @@ import { usePedidos } from '../hooks/usePedidos';
 export default function Producao({ selectedProject, addToast }) {
   const { pedidos, loading, createPedido, updatePedidoStatus, deletePedido } = usePedidos(selectedProject?.id);
   const [showModal, setShowModal] = useState(false);
-  const [newPedido, setNewPedido] = useState({ title: '', description: '' });
-  const [isSaving, setIsSaving] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
 
   const columns = [
-    { id: 'pendente', label: 'PEDIDOS PENDENTES', color: 'var(--text-secondary)' },
-    { id: 'em_andamento', label: 'PEDIDOS EM ANDAMENTO', color: 'var(--accent)' },
-    { id: 'finalizado', label: 'PEDIDOS FINALIZADOS', color: '#7A7A7A' },
+    { id: 'pendente', label: 'PEDIDOS PENDENTES' },
+    { id: 'em_andamento', label: 'PEDIDOS EM ANDAMENTO' },
+    { id: 'finalizado', label: 'PEDIDOS FINALIZADOS' },
   ];
 
   async function handleCreate(e) {
     e.preventDefault();
-    if (!newPedido.title) return;
-    setIsSaving(true);
+    if (!title.trim()) return;
     try {
-      await createPedido(newPedido);
-      addToast("✅ Pedido criado com sucesso!");
+      await createPedido({ title, description });
+      setTitle('');
+      setDescription('');
       setShowModal(false);
-      setNewPedido({ title: '', description: '' });
-    } catch (err) {
-      addToast("❌ Erro ao criar pedido.");
-    } finally {
-      setIsSaving(false);
+      addToast?.('Pedido criado!');
+    } catch {
+      addToast?.('Erro ao criar pedido.');
     }
   }
 
-  const handleDragOver = (e) => e.preventDefault();
-  
-  const handleDrop = async (e, targetStatus) => {
-    const pedidoId = e.dataTransfer.getData("pedidoId");
-    if (!pedidoId) return;
-    try {
-      await updatePedidoStatus(pedidoId, targetStatus);
-    } catch (err) {
-      addToast("❌ Erro ao mover pedido.");
-    }
-  };
-
   return (
-    <div style={{ 
-      flex: 1, 
-      display: "flex", 
-      flexDirection: "column", 
-      height: "100vh",
-      minHeight: 0,
-      overflow: "hidden",
-      background: "var(--bg-base)"
-    }} className="anim-fadeIn">
-      {/* Sub-header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--border)" }}>
-        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>Fluxo de Produção</h2>
-        <button 
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-base)' }}>
+      
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--border)' }}>
+        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+          Produção
+        </h2>
+        <button
           onClick={() => setShowModal(true)}
-          style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "8px 16px", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "transform 0.2s" }}
-          onMouseOver={e => e.currentTarget.style.transform = "scale(1.02)"}
-          onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
+          style={{ background: '#00FF87', color: '#0D0D0D', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}
         >
           + Novo Pedido
         </button>
       </div>
 
-      {/* Kanban Board */}
-      <div style={{ 
-        flex: 1, 
-        display: "flex", 
-        gap: 16, 
-        padding: 24, 
-        overflowX: "auto",
-        alignItems: "flex-start",
-        minHeight: 0
-      }}>
+      {/* Kanban */}
+      <div style={{ display: 'flex', gap: 16, padding: 24, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
         {columns.map(col => (
-          <div 
-            key={col.id}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, col.id)}
-            style={{ minWidth: 320, width: 320, display: "flex", flexDirection: "column", gap: 12 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: col.color }}></div>
-              <h3 style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", letterSpacing: "0.1em" }}>{col.label}</h3>
-              <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-secondary)", opacity: 0.5 }}>
+          <div key={col.id} style={{ minWidth: 300, width: 300, background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border)', padding: 16 }}>
+            
+            {/* Column header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.1em' }}>{col.label}</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: 20 }}>
                 {pedidos.filter(p => p.status === col.id).length}
               </span>
             </div>
 
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {pedidos.filter(p => p.status === col.id).map(pedido => (
-                <div 
-                  key={pedido.id}
-                  draggable
-                  onDragStart={(e) => e.dataTransfer.setData("pedidoId", pedido.id)}
-                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 10, padding: 16, cursor: "grab", transition: "all 0.2s" }}
-                  onMouseOver={e => e.currentTarget.style.borderColor = "var(--accent-soft)"}
-                  onMouseOut={e => e.currentTarget.style.borderColor = "var(--border)"}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6 }}>{pedido.title}</div>
-                  {pedido.description && (
-                    <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 12 }}>{pedido.description}</div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.5 }}>
-                      #{pedido.id.slice(0, 4)} • {new Date(pedido.created_at).toLocaleDateString()}
-                    </div>
+                <div key={pedido.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 14 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>{pedido.title}</div>
+                  {pedido.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>{pedido.description}</div>}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {col.id !== 'em_andamento' && col.id !== 'finalizado' && (
+                      <button onClick={() => updatePedidoStatus(pedido.id, 'em_andamento')} style={{ fontSize: 11, background: '#00FF8720', color: '#00FF87', border: '1px solid #00FF87', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
+                        Iniciar
+                      </button>
+                    )}
+                    {col.id === 'em_andamento' && (
+                      <button onClick={() => updatePedidoStatus(pedido.id, 'finalizado')} style={{ fontSize: 11, background: '#00FF8720', color: '#00FF87', border: '1px solid #00FF87', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
+                        Finalizar
+                      </button>
+                    )}
                     {col.id === 'finalizado' && (
-                       <button 
-                        onClick={() => deletePedido(pedido.id)}
-                        style={{ background: 'none', border: 'none', color: '#FF4C4C', fontSize: 11, cursor: 'pointer', padding: '4px' }}
-                      >
+                      <button onClick={() => deletePedido(pedido.id)} style={{ fontSize: 11, background: '#FF4C4C20', color: '#FF4C4C', border: '1px solid #FF4C4C', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
                         Excluir
                       </button>
                     )}
                   </div>
                 </div>
               ))}
-              {loading && <div style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center', padding: 20 }}>Carregando...</div>}
               {!loading && pedidos.filter(p => p.status === col.id).length === 0 && (
-                <div style={{ border: "2px dashed var(--border)", borderRadius: 10, height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 12, opacity: 0.3 }}>
+                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12, padding: 20, opacity: 0.5 }}>
                   Nenhum pedido
                 </div>
               )}
@@ -129,42 +91,29 @@ export default function Producao({ selectedProject, addToast }) {
         ))}
       </div>
 
-      {/* Modal Novo Pedido */}
+      {/* Modal */}
       {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 4000 }}>
-          <div className="anim-scaleIn" style={{ background: "var(--bg-card)", width: "100%", maxWidth: 400, borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Syne', sans-serif" }}>Novo Pedido de Produção</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 20, cursor: "pointer" }}>&times;</button>
-            </div>
-            <form onSubmit={handleCreate} style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, display: "block", marginBottom: 8 }}>Título do Pedido *</label>
-                <input 
-                  autoFocus
-                  required
-                  placeholder="Ex: Fabricação Lote A"
-                  value={newPedido.title}
-                  onChange={e => setNewPedido({...newPedido, title: e.target.value})}
-                  style={{ width: "100%", background: "var(--bg-base)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontSize: 14 }}
-                />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#1F1F1F', borderRadius: 16, border: '1px solid #2A2A2A', width: 400, padding: 24 }}>
+            <h3 style={{ fontFamily: "'Syne', sans-serif", color: '#F0F0F0', margin: '0 0 20px' }}>Novo Pedido</h3>
+            <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                autoFocus required
+                placeholder="Título do pedido"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                style={{ background: '#161616', border: '1px solid #2A2A2A', borderRadius: 8, padding: '10px 12px', color: '#F0F0F0', fontSize: 14, outline: 'none' }}
+              />
+              <textarea
+                placeholder="Descrição (opcional)"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                style={{ background: '#161616', border: '1px solid #2A2A2A', borderRadius: 8, padding: '10px 12px', color: '#F0F0F0', fontSize: 14, outline: 'none', resize: 'none', height: 80 }}
+              />
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="submit" style={{ flex: 1, background: '#00FF87', color: '#0D0D0D', border: 'none', borderRadius: 8, padding: 12, fontWeight: 700, cursor: 'pointer' }}>Criar</button>
+                <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, background: 'transparent', color: '#7A7A7A', border: '1px solid #2A2A2A', borderRadius: 8, padding: 12, cursor: 'pointer' }}>Cancelar</button>
               </div>
-              <div>
-                <label style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: 600, display: "block", marginBottom: 8 }}>Descrição / Observações</label>
-                <textarea 
-                  placeholder="Detalhes técnicos ou observações..."
-                  value={newPedido.description}
-                  onChange={e => setNewPedido({...newPedido, description: e.target.value})}
-                  style={{ width: "100%", height: 100, background: "var(--bg-base)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontSize: 14, resize: "none" }}
-                />
-              </div>
-              <button 
-                type="submit"
-                disabled={isSaving}
-                style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", marginTop: 8 }}
-              >
-                {isSaving ? "Criando..." : "Criar Pedido"}
-              </button>
             </form>
           </div>
         </div>
