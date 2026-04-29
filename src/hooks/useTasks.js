@@ -15,17 +15,22 @@ export function useTasks() {
   }, [])
 
   const fetchTasks = async () => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .order('position', { ascending: true })
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('position', { ascending: true })
 
-    if (error) {
-      console.error('Erro:', JSON.stringify(error))
-      return
+      if (error) {
+        console.error('Erro tasks:', error)
+        return
+      }
+      setTasks(data || [])
+    } catch (err) {
+      console.error('Erro tasks:', err)
+    } finally {
+      setLoading(false)
     }
-    setTasks(data || [])
-    setLoading(false)
   }
 
   async function createTask(task) {

@@ -199,19 +199,7 @@ export default function App() {
 
   if (!user) return <Login />;
 
-  if (tasksLoading) return (
-    <div style={{ 
-      display: 'flex', alignItems: 'center', 
-      justifyContent: 'center', height: '100vh',
-      color: 'var(--accent)', 
-      fontFamily: "'Syne', sans-serif",
-      fontSize: 24, gap: 12,
-      background: "var(--bg-base)"
-    }}>
-      <span className="anim-pulse">FLOW</span>
-      <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>carregando dados...</span>
-    </div>
-  );
+
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
