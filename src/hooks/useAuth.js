@@ -48,16 +48,15 @@ export function useAuth() {
 
   async function fetchProfile(email) {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
         .single()
-      
+
       if (data) {
         setProfile(data)
       } else {
-        // usuário autenticado mas sem perfil na tabela — criar perfil mínimo
         setProfile({
           email,
           name: email.split('@')[0],
@@ -66,8 +65,6 @@ export function useAuth() {
         })
       }
     } catch (err) {
-      console.error('Erro ao buscar perfil:', err)
-      // nunca travar — setar perfil mínimo como fallback
       setProfile({
         email,
         name: email.split('@')[0],
