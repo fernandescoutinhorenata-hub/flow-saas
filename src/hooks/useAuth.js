@@ -8,89 +8,45 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Timeout absoluto — após 4s sai do loading independente do que aconteça
-    const timeout = setTimeout(() => setLoading(false), 4000)
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.email).finally(() => {
-          clearTimeout(timeout)
-          setLoading(false)
-        })
-      } else {
-        clearTimeout(timeout)
-        setLoading(false)
+    const saved = localStorage.getItem('flow_user')
+    if (saved) {
+      try {
+        const userData = JSON.parse(saved)
+        setProfile(userData)
+        setUser(userData)
+      } catch {
+        localStorage.removeItem('flow_user')
       }
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          fetchProfile(session.user.email)
-        } else {
-          setProfile(null)
-        }
-      }
-    )
-
-    return () => {
-      clearTimeout(timeout)
-      subscription.unsubscribe()
     }
+    setLoading(false)
   }, [])
 
-  async function fetchProfile(email) {
-    try {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single()
-
-      if (data) {
-        setProfile(data)
-      } else {
-        // Se não tiver na tabela users, limpamos a sessão para garantir segurança
-        await signOut()
-        setProfile(null)
-      }
-    } catch {
-      setProfile(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function signIn(email) {
-    // 1. Verifica se email está na tabela users
-    const { data: userExists, error: checkError } = await supabase
+    setLoading(true)
+    const { data, error } = await supabase
       .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle()
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .eq('active', true)
+      .single()
 
-    if (!userExists || checkError) {
+    if (error || !data) {
+      setLoading(false)
       throw new Error('Acesso não autorizado. Entre em contato com o administrador.')
     }
 
-    // 2. Envia magic link
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true, // Deve ser true para o Auth criar a entrada, mas o app só deixa logar se tiver na tabela users
-        emailRedirectTo: 'https://flow-saas-beta.vercel.app'
-      }
-    })
-
-    if (error) throw error
+    // Salva no localStorage para persistir sessão
+    localStorage.setItem('flow_user', JSON.stringify(data))
+    setProfile(data)
+    setUser(data)
+    setLoading(false)
+    return data
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
-    setUser(null)
+    localStorage.removeItem('flow_user')
     setProfile(null)
+    setUser(null)
   }
 
   async function inviteMember({ name, email, role }) {

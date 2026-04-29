@@ -6,7 +6,6 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [sent, setSent] = useState(false)
 
   async function handleSubmit(e) {
     if (e) e.preventDefault()
@@ -19,52 +18,12 @@ export default function Login() {
     setError('')
     try {
       await signIn(email)
-      setSent(true)
     } catch (err) {
       console.error(err)
-      setError(err.message || 'Erro ao tentar entrar. Tente novamente.')
+      setError(err.message || 'Acesso não autorizado. Entre em contato com o administrador.')
     } finally {
       setLoading(false)
     }
-  }
-
-  if (sent) {
-    return (
-      <div style={{ minHeight:'100vh', display:'flex', 
-        alignItems:'center', justifyContent:'center',
-        background:'#0D0D0D' }}>
-        <div className="anim-fadeInUp" style={{
-          background:'#1F1F1F', 
-          border:'1px solid #2A2A2A',
-          borderRadius:16, padding:'48px 40px', width:400,
-          boxShadow:'0 24px 64px rgba(0,0,0,0.7)',
-          textAlign:'center'
-        }}>
-          <div style={{ fontSize: 48, marginBottom: 24 }}>📧</div>
-          <h2 style={{ fontFamily:"'Syne', sans-serif", fontWeight:700, fontSize:24, color:'#F0F0F0', marginBottom:12 }}>
-            Link enviado!
-          </h2>
-          <p style={{ color:'#7A7A7A', fontSize:15, lineHeight:1.6, marginBottom:32 }}>
-            Enviamos um link de acesso para <strong style={{ color:'#00FF87' }}>{email}</strong>.<br/>
-            Clique no link para entrar no app.
-          </p>
-          
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            <button 
-              onClick={handleSubmit}
-              disabled={loading}
-              style={{ width:'100%', padding:13, background:'transparent', border:'1px solid #2A2A2A', borderRadius:8, color:'#F0F0F0', fontFamily:"'DM Sans', sans-serif", fontWeight:600, fontSize:14, cursor:'pointer' }}>
-              {loading ? 'Reenviando...' : 'Reenviar email'}
-            </button>
-            <button 
-              onClick={() => setSent(false)}
-              style={{ width:'100%', padding:13, background:'transparent', border:'none', borderRadius:8, color:'#7A7A7A', fontFamily:"'DM Sans', sans-serif", fontSize:13, cursor:'pointer' }}>
-              Usar outro email
-            </button>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
