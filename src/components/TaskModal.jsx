@@ -267,19 +267,24 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
 
         {/* Modal footer */}
         <div style={{ padding: "16px 28px", borderTop: "1px solid var(--border)", display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          {showDelete && (
-            <button
-              onClick={() => onDelete(task.id)}
-              style={{
-                background: "transparent", border: "none", cursor: "pointer",
-                color: "#FF4C4C", fontSize: 13, padding: "9px 16px",
-                borderRadius: 8, fontFamily: "'DM Sans', sans-serif",
-                transition: "background 0.15s",
-              }}
-              onMouseOver={e => e.currentTarget.style.background = "#FF4C4C15"}
-              onMouseOut={e => e.currentTarget.style.background = "transparent"}
-            >Excluir tarefa</button>
-          )}
+          <button
+            onClick={() => {
+              onDelete(task.id)
+              onClose()
+            }}
+            style={{
+              background: 'transparent',
+              border: '1px solid #FF4C4C',
+              color: '#FF4C4C',
+              borderRadius: 8,
+              padding: '8px 16px',
+              fontSize: 13,
+              cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            Excluir tarefa
+          </button>
           {canEdit && (
             <button
               onClick={handleSave}
