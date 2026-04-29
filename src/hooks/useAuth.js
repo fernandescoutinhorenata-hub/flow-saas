@@ -49,39 +49,59 @@ export function useAuth() {
         .eq('email', email)
         .single()
 
-      setProfile(data || {
-        email,
-        name: email.split('@')[0],
-        role: 'membro',
-        initials: email.slice(0, 2).toUpperCase()
-      })
+      if (data) {
+        setProfile(data)
+      } else {
+        // Se não tiver na tabela users, limpamos a sessão para garantir segurança
+        await signOut()
+        setProfile(null)
+      }
     } catch {
-      setProfile({
-        email,
-        name: email.split('@')[0],
-        role: 'membro',
-        initials: email.slice(0, 2).toUpperCase()
-      })
+      setProfile(null)
     } finally {
       setLoading(false)
     }
   }
 
-  async function signIn(email, password) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+  async function signIn(email) {
+    // 1. Verifica se email está na tabela users
+    const { data: userExists, error: checkError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (!userExists || checkError) {
+      throw new Error('Acesso não autorizado. Entre em contato com o administrador.')
+    }
+
+    // 2. Envia magic link
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true, // Deve ser true para o Auth criar a entrada, mas o app só deixa logar se tiver na tabela users
+        emailRedirectTo: 'https://flow-saas-beta.vercel.app'
+      }
+    })
+
     if (error) throw error
   }
 
   async function signOut() {
     await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
   }
 
   async function inviteMember({ name, email, role }) {
     const initials = name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
-    const { error: dbError } = await supabase.from('users').insert([{ name, email, role, initials, active: true }])
-    if (dbError) throw dbError
-    const { data, error: inviteError } = await supabase.functions.invoke('invite-user', { body: { email, name, role } })
-    if (inviteError || data?.error) throw new Error(inviteError?.message || data?.error)
+    
+    // Insere apenas na tabela users (acesso permitido)
+    const { error } = await supabase.from('users').insert([{
+      name, email, role, initials, active: true
+    }])
+    
+    if (error) throw error
   }
 
   const hasPermission = (action) => {

@@ -44,7 +44,7 @@ export default function Settings({ hasPermission, addToast }) {
     setInviting(true);
     try {
       await inviteMember(inviteData);
-      addToast(`✅ Convite enviado para ${inviteData.email}`);
+      addToast(`✅ Membro ${inviteData.email} adicionado com sucesso!`);
       setShowInvite(false);
       setInviteData({ name: '', email: '', role: 'membro' });
     } catch (err) {
@@ -52,7 +52,7 @@ export default function Settings({ hasPermission, addToast }) {
       if (msg.includes("already exists") || msg.includes("unique")) {
         addToast(`❌ Este email já está cadastrado`);
       } else {
-        addToast("❌ Erro ao enviar convite.");
+        addToast("❌ Erro ao adicionar membro.");
       }
     } finally {
       setInviting(false);
@@ -93,10 +93,14 @@ export default function Settings({ hasPermission, addToast }) {
   const tabs = ([
     { id: "perfil", label: "Perfil" },
     { id: "projetos", label: "Projetos", perm: "manage_members" },
-    { id: "membros", label: "Membros", perm: "manage_members" },
+    { id: "membros", label: "Equipe", ownerOnly: true },
     { id: "notificacoes", label: "Notificações" },
     { id: "aparencia", label: "Aparência" },
-  ]).filter(t => !t.perm || hasPermission(t.perm));
+  ]).filter(t => {
+    if (t.ownerOnly) return currentUser?.role === 'dono';
+    if (t.perm) return hasPermission(t.perm);
+    return true;
+  });
 
   return (
     <div className="anim-fadeInUp" style={{ flex: 1, padding: "24px 32px", overflowY: "auto", display: "flex", flexDirection: "column" }}>
@@ -198,7 +202,7 @@ export default function Settings({ hasPermission, addToast }) {
                   onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"} 
                   onMouseOut={e => e.currentTarget.style.background = "transparent"}
                 >
-                  {showInvite ? "Cancelar" : "+ Convidar"}
+                  {showInvite ? "Cancelar" : "+ Adicionar Membro"}
                 </button>
               </div>
 
@@ -233,9 +237,9 @@ export default function Settings({ hasPermission, addToast }) {
                     </select>
                     <button 
                       disabled={inviting}
-                      style={{ background: "var(--accent)", border: "none", color: "#0D0D0D", padding: "8px 24px", borderRadius: 6, fontWeight: 600, cursor: "pointer" }}
+                      style={{ background: "var(--accent)", border: "none", color: "#0D0D0D", padding: "8px 24px", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontFamily: "'Syne', sans-serif" }}
                     >
-                      {inviting ? "Enviando..." : "Enviar Convite"}
+                      {inviting ? "Adicionando..." : "Adicionar membro"}
                     </button>
                   </div>
                 </form>
