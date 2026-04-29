@@ -17,10 +17,10 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
   const titleRef = useRef();
 
   const isAvailable = !task.assignee;
-  const isOwner = (task.assignee_initials || task.assigneeInitials) === currentUser.initials;
+  const isOwner = (task.assignee_initials || task.assigneeInitials) === currentUser?.initials;
   
-  const canEdit = !isAvailable && (hasPermission("edit_any_task") || (isOwner && currentUser.role === "membro"));
-  const showDelete = !isAvailable && (hasPermission("delete_task") || (isOwner && currentUser.role === "gestor"));
+  const canEdit = !isAvailable && (hasPermission("edit_any_task") || (isOwner && currentUser?.role === "membro"));
+  const showDelete = !isAvailable && (hasPermission("delete_task") || (isOwner && currentUser?.role === "gestor"));
 
   useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
 

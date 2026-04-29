@@ -22,8 +22,8 @@ export default function Settings({ hasPermission, addToast }) {
   // Sincroniza quando currentUser carrega de forma assíncrona
   useEffect(() => {
     if (currentUser) {
-      setName(currentUser.name || '')
-      setEmail(currentUser.email || '')
+      setName(currentUser?.name || '')
+      setEmail(currentUser?.email || '')
     }
   }, [currentUser])
   

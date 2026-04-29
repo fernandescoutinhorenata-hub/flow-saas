@@ -109,7 +109,7 @@ export function useAuth() {
 
   const hasPermission = (action) => {
     if (!profile) return false
-    const userPermissions = PERMISSIONS[profile.role] || []
+    const userPermissions = PERMISSIONS[profile?.role] || []
     return userPermissions.includes(action)
   }
 

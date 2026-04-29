@@ -13,7 +13,7 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
   const pColor = PRIORITY_COLORS[task.priority];
   const prog = subtasks.total > 0 ? subtasks.done / subtasks.total : 0;
   const isAvailable = !task.assignee;
-  const isMine = assigneeInitials === currentUser.initials;
+  const isMine = assigneeInitials === currentUser?.initials;
   const [hovered, setHovered] = useState(false);
 
   return (

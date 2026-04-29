@@ -13,7 +13,7 @@ export default function OwnerPanel() {
   useEffect(() => {
     if (!loading) {
       // Redireciona se não for dono
-      if (!profile || profile.role !== 'dono') {
+      if (!profile || profile?.role !== 'dono') {
         window.location.href = '/'
         return
       }
@@ -79,7 +79,7 @@ export default function OwnerPanel() {
     </div>
   )
 
-  if (!profile || profile.role !== 'dono') return null
+  if (!profile || profile?.role !== 'dono') return null
 
   return (
     <div style={{ minHeight:'100vh', 

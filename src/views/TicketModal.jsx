@@ -7,8 +7,8 @@ import { timeAgo } from '../utils.js';
 export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond, onDelete }) {
   const { currentUser, hasPermission } = useAuth();
   const [responseText, setResponseText] = useState("");
-  const isAuthor = (ticket.author_id || ticket.authorId) === currentUser.id;
-  const canRespond = hasPermission("manage_members") || currentUser.role === "gestor";
+  const isAuthor = (ticket.author_id || ticket.authorId) === currentUser?.id;
+  const canRespond = hasPermission("manage_members") || currentUser?.role === "gestor";
   const typeInfo = TICKET_TYPES[ticket.type];
   const responses = ticket.ticket_responses || ticket.responses || [];
 
