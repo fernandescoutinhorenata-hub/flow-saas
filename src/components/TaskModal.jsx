@@ -223,6 +223,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
                 value={due}
                 onChange={e => setDue(e.target.value)}
                 readOnly={!canEdit}
+                min={new Date().toISOString().split('T')[0]}
                 style={{
                   background: "var(--bg-card)", border: "1px solid var(--border)",
                   borderRadius: 8, color: "var(--text-primary)", fontSize: 13,

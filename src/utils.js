@@ -19,7 +19,7 @@ export function newId() { return ++_nextId; }
 
 export function timeAgo(dateStr) {
   const date = new Date(dateStr);
-  const now = new Date("2025-06-09T12:00:00");
+  const now = new Date();
   const diffInSeconds = Math.floor((now - date) / 1000);
   
   if (diffInSeconds < 60) return "agora mesmo";

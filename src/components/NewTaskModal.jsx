@@ -4,7 +4,7 @@ import { COLUMNS } from '../data.js';
 export default function NewTaskModal({ onClose, onCreate, columns }) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [due, setDue] = useState("2025-07-01");
+  const [due, setDue] = useState("2026-07-01");
   const [status, setStatus] = useState("backlog");
 
   function handleCreate() {
@@ -73,16 +73,22 @@ export default function NewTaskModal({ onClose, onCreate, columns }) {
             </select>
           </div>
 
-          <div>
-            <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Prazo</label>
-            <input type="date" value={due} onChange={e => setDue(e.target.value)}
-              style={{
-                width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: 8, color: "var(--text-primary)", fontSize: 13, padding: "9px 10px",
-                outline: "none", fontFamily: "'DM Sans', sans-serif", colorScheme: "dark",
-              }}
-            />
-          </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Prazo</label>
+              <input
+                type="date"
+                value={due}
+                onChange={e => setDue(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  background: "var(--bg-card)", border: "1px solid var(--border)",
+                  borderRadius: 8, color: "var(--text-primary)", fontSize: 13,
+                  padding: "8px 10px", outline: "none", width: "100%",
+                  fontFamily: "'DM Sans', sans-serif",
+                  colorScheme: "dark",
+                }}
+              />
+            </div>
 
           <button onClick={handleCreate} style={{
             background: "var(--accent)", border: "none", borderRadius: 8,
