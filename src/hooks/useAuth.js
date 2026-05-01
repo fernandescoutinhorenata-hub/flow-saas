@@ -60,10 +60,24 @@ export function useAuth() {
     if (error) throw error
   }
 
-  const hasPermission = (action) => {
-    if (!profile) return false
-    return (PERMISSIONS[profile?.role] || []).includes(action)
+  async function refreshUser() {
+    const saved = localStorage.getItem('flow_user')
+    if (!saved) return
+    
+    const localUser = JSON.parse(saved)
+    
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', localUser.id)
+      .single()
+    
+    if (data) {
+      localStorage.setItem('flow_user', JSON.stringify(data))
+      setProfile(data)
+      setUser(data)
+    }
   }
 
-  return { user, profile, currentUser: profile, loading, signIn, signOut, inviteMember, hasPermission }
+  return { user, profile, currentUser: profile, loading, signIn, signOut, inviteMember, hasPermission, refreshUser }
 }

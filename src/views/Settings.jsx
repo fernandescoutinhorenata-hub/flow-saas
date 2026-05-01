@@ -17,7 +17,7 @@ export default function Settings({
   removeMember,
   users 
 }) {
-  const { currentUser, inviteMember } = useAuth();
+  const { currentUser, inviteMember, refreshUser } = useAuth();
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -132,12 +132,9 @@ export default function Settings({
         return
       }
       
-      // Atualizar localStorage
-      const updated = { ...currentUser, avatar_url: base64 }
-      localStorage.setItem('flow_user', JSON.stringify(updated))
-      
+      // Atualizar dados localmente e sincronizar sem reload
+      await refreshUser()
       addToast('Avatar atualizado!')
-      window.location.reload() // recarrega para refletir
     }
     reader.readAsDataURL(file)
   }

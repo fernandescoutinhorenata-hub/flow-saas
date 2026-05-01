@@ -1,11 +1,18 @@
 import React from 'react';
 
-export default function Avatar({ initials = "?", size = 24, avatarUrl }) {
+export default function Avatar({ initials = '?', size = 32, avatarUrl }) {
   if (avatarUrl) {
     return (
-      <img 
-        src={avatarUrl} 
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: "1.5px solid #2A2A2A" }} 
+      <img
+        src={avatarUrl}
+        alt={initials}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          flexShrink: 0
+        }}
       />
     )
   }
