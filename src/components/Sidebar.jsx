@@ -107,7 +107,7 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav, mobileOpen
             borderTop: "1px solid var(--border)",
             display: "flex", alignItems: "center", gap: 10,
           }}>
-            <Avatar initials={currentUser?.initials || "?"} size={28} />
+            <Avatar initials={currentUser?.initials || "?"} avatarUrl={currentUser?.avatar_url} size={28} />
             <div style={{ overflow: "hidden" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {currentUser?.name || "Usuário"}
@@ -166,7 +166,7 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav, mobileOpen
         display: "flex", alignItems: "center", gap: 10,
         minHeight: 50
       }}>
-        <Avatar initials={currentUser?.initials || "?"} size={28} />
+        <Avatar initials={currentUser?.initials || "?"} avatarUrl={currentUser?.avatar_url} size={28} />
         {!collapsed && (
           <div style={{ overflow: "hidden" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

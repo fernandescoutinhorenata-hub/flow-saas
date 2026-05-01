@@ -324,7 +324,7 @@ export default function App() {
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Avatar initials={currentUser?.initials} size={32} roleBadge={currentUser?.role} />
+          <Avatar initials={currentUser?.initials} avatarUrl={currentUser?.avatar_url} size={32} roleBadge={currentUser?.role} />
           <button 
             onClick={signOut}
             title="Sair"

@@ -3,6 +3,7 @@ import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useProjects } from '../hooks/useProjects.js';
+import { supabase } from '../lib/supabase'
 
 export default function Settings({ 
   hasPermission, 
@@ -106,6 +107,41 @@ export default function Settings({
     }
   }
 
+  async function handleAvatarUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    // Validar tamanho (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      addToast('Imagem muito grande. Máximo 2MB.')
+      return
+    }
+
+    // Converter para base64
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      const base64 = event.target.result
+      
+      const { error } = await supabase
+        .from('users')
+        .update({ avatar_url: base64 })
+        .eq('id', currentUser.id)
+      
+      if (error) {
+        addToast('Erro ao salvar avatar.')
+        return
+      }
+      
+      // Atualizar localStorage
+      const updated = { ...currentUser, avatar_url: base64 }
+      localStorage.setItem('flow_user', JSON.stringify(updated))
+      
+      addToast('Avatar atualizado!')
+      window.location.reload() // recarrega para refletir
+    }
+    reader.readAsDataURL(file)
+  }
+
   const tabs = ([
     { id: "perfil", label: "Perfil" },
     { id: "projetos", label: "Projetos", perm: "manage_members" },
@@ -143,8 +179,26 @@ export default function Settings({
           {activeTab === "perfil" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }} className="anim-fadeInUp">
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <Avatar initials={currentUser?.initials || ''} size={64} />
-                <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", padding: "8px 16px", cursor: "pointer", fontSize: 13, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--border)"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>Trocar Avatar</button>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  {currentUser?.avatar_url ? (
+                    <img 
+                      src={currentUser.avatar_url} 
+                      style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #00FF87' }} 
+                    />
+                  ) : (
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#F0F0F0', border: '2px solid #2A2A2A' }}>
+                      {currentUser?.initials || '?'}
+                    </div>
+                  )}
+                  <label style={{ position: 'absolute', bottom: 0, right: 0, background: '#00FF87', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12 }}>
+                    ✏️
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+                  </label>
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4 }}>Foto de Perfil</div>
+                  Tamanho máximo: 2MB
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
