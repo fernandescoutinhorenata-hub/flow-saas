@@ -32,6 +32,12 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
     setSubtasks(prev => prev.map(s => s.id === id ? { ...s, done: !s.done } : s));
   }
 
+  async function handleDescriptionBlur() {
+    if (desc !== task.description) {
+      onSave({ ...task, title, description: desc, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
+    }
+  }
+
   function handleSave() {
     if (!canEdit) return;
     onSave({ ...task, title, description: desc, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
@@ -128,18 +134,23 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
               <textarea
                 value={desc}
                 onChange={e => setDesc(e.target.value)}
-                readOnly={!canEdit}
-                placeholder={canEdit ? "Adicione uma descrição..." : "Sem descrição."}
-                rows={3}
+                onBlur={handleDescriptionBlur}
+                placeholder="Adicionar descrição..."
                 style={{
-                  width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)",
-                  borderRadius: 8, color: "var(--text-primary)", fontSize: 13,
-                  padding: "10px 12px", resize: "vertical", outline: "none",
-                  fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5,
-                  transition: "border-color 0.15s",
+                  width: '100%',
+                  minHeight: 100,
+                  background: 'var(--bg-base)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  color: 'var(--text-primary)',
+                  fontSize: 14,
+                  resize: 'vertical',
+                  outline: 'none',
+                  fontFamily: "'DM Sans', sans-serif",
+                  lineHeight: 1.5
                 }}
-                onFocus={e => canEdit && (e.target.style.borderColor = "#00FF8760")}
-                onBlur={e => e.target.style.borderColor = "var(--border)"}
+                onFocus={e => e.target.style.borderColor = '#00FF87'}
               />
             </div>
 
