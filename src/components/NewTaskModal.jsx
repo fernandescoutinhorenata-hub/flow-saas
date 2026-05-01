@@ -4,7 +4,8 @@ import { COLUMNS } from '../data.js';
 export default function NewTaskModal({ onClose, onCreate, columns }) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [due, setDue] = useState("2026-07-01");
+  const today = new Date().toISOString().split('T')[0];
+  const [due, setDue] = useState(today);
   const [status, setStatus] = useState("backlog");
 
   function handleCreate() {
