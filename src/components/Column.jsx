@@ -100,6 +100,23 @@ export default function Column({ col, tasks, onCardClick, dragState, onDragStart
             </div>
           )}
         </div>
+
+        {col.id === 'done' && (
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('nav-change', { detail: 'archive' }))}
+            style={{ 
+              width: '100%', marginTop: 12, padding: '10px', 
+              background: 'transparent', border: '1px solid var(--border)', 
+              borderRadius: 8, color: 'var(--text-secondary)', fontSize: 11, 
+              fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+          >
+            📂 Ver arquivo histórico
+          </button>
+        )}
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import Timeline from './views/Timeline.jsx';
 import Reports from './views/Reports.jsx';
 import Producao from './views/Producao.jsx';
 import Settings from './views/Settings.jsx';
+import Archive from './views/Archive.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NewColumnButton from './components/NewColumnGhost.jsx';
 import RoleSelector from './components/RoleSelector.jsx';
@@ -29,7 +30,7 @@ export default function App() {
   const { projects, selectedProject, setSelectedProject, createProject, updateProject, deleteProject, addMember, removeMember, loading: projectsLoading } = useProjects(currentUser);
   const { users, toggleUserActive } = useUsers();
   
-  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
+  const { tasks, archivedTasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
   const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
   
@@ -45,6 +46,12 @@ export default function App() {
   const [confirmDeleteCol, setConfirmDeleteCol] = useState(null);
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const toastTimer = useRef({});
+
+  React.useEffect(() => {
+    const handleNav = (e) => setActiveNav(e.detail);
+    window.addEventListener('nav-change', handleNav);
+    return () => window.removeEventListener('nav-change', handleNav);
+  }, []);
 
 
   function addToast(message) {
@@ -438,6 +445,12 @@ export default function App() {
                 users={users}
               />
             </ErrorBoundary>
+          </main>
+        )}
+
+        {activeNav === "archive" && (
+          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <Archive tasks={archivedTasks} />
           </main>
         )}
       </div>

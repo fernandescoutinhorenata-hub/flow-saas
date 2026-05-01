@@ -1,13 +1,18 @@
 import { TODAY } from './data.js';
 export { TODAY };
 
-export function formatDue(dateStr) {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-}
+export const formatDate = (dateStr) => {
+  if (!dateStr) return 'Sem prazo';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'Sem prazo';
+  return date.toLocaleDateString('pt-BR');
+};
 
 export function isOverdue(dateStr) {
-  return new Date(dateStr + "T00:00:00") < TODAY;
+  if (!dateStr) return false;
+  const d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return false;
+  return d < TODAY;
 }
 
 export function getInitials(name) {

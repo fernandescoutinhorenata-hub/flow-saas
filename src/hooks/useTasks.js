@@ -93,5 +93,17 @@ export function useTasks(projectId = null) {
     await fetchTasks()
   }
 
-  return { tasks, loading, createTask, updateTask, deleteTask, moveTask }
+  const today = new Date().toDateString()
+  
+  const activeTasks = tasks.filter(t => 
+    t.status !== 'done' || 
+    new Date(t.updated_at).toDateString() === today
+  )
+
+  const archivedTasks = tasks.filter(t => 
+    t.status === 'done' && 
+    new Date(t.updated_at).toDateString() !== today
+  )
+
+  return { tasks: activeTasks, archivedTasks, allTasks: tasks, loading, createTask, updateTask, deleteTask, moveTask }
 }

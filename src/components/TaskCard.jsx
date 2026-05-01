@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Avatar from './Avatar.jsx';
-import { formatDue, isOverdue } from '../utils.js';
+import { formatDate, isOverdue } from '../utils.js';
 import { PRIORITY_COLORS } from '../data.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -83,7 +83,7 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
         )}
         
         <span style={{ fontSize: 12, color: overdue ? "#FF4C4C" : "var(--text-secondary)", flex: 1 }}>
-          {overdue && "⚠ "}{formatDue(task.due)}
+          {overdue && "⚠ "}{formatDate(task.due)}
         </span>
 
         {isMine && !isAvailable && (

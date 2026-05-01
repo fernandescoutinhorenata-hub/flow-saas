@@ -8,7 +8,8 @@ import {
   Clock, 
   ClipboardList, 
   BarChart3, 
-  Settings as SettingsIcon 
+  Settings as SettingsIcon,
+  Archive
 } from 'lucide-react';
 
 export default function Sidebar({ collapsed, activeNav, setActiveNav, mobileOpen, setMobileOpen }) {
@@ -30,6 +31,7 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav, mobileOpen
     { view: "timeline",  icon: <Clock size={18} />,           label: "Timeline" },
     { view: "registros", icon: <ClipboardList size={18} />,   label: "Registros" },
     { view: "reports",   icon: <BarChart3 size={18} />,       label: "Relatórios" },
+    { view: "archive",   icon: <Archive size={18} />,        label: "Arquivo" },
     { view: "settings",  icon: <SettingsIcon size={18} />,    label: "Config." },
   ];
 
