@@ -17,7 +17,7 @@ export default function Settings({
   users,
   toggleUserActive
 }) {
-  const { currentUser, inviteMember, refreshUser, hasPermission } = useAuth();
+  const { currentUser, inviteMember, refreshUser, hasPermission, setProfile, setUser } = useAuth();
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -111,21 +111,35 @@ export default function Settings({
     const file = e.target.files[0]
     if (!file) return
     
-    // Validar tamanho (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       addToast('Imagem muito grande. Máximo 2MB.')
       return
     }
 
-    // Converter para base64
     const reader = new FileReader()
     reader.onload = async (event) => {
       const base64 = event.target.result
       
-      await supabase.from('users').update({ avatar_url: base64 }).eq('id', currentUser.id)
-      localStorage.setItem('flow_user', JSON.stringify({ ...currentUser, avatar_url: base64 }))
-      await refreshUser()
-      addToast('Avatar atualizado!')
+      // 1. Salvar no banco
+      const { error } = await supabase
+        .from('users')
+        .update({ avatar_url: base64 })
+        .eq('email', currentUser.email)
+      
+      if (error) {
+        addToast('Erro ao salvar avatar.')
+        return
+      }
+      
+      // 2. Atualizar localStorage com avatar_url
+      const updatedUser = { ...currentUser, avatar_url: base64 }
+      localStorage.setItem('flow_user', JSON.stringify(updatedUser))
+      
+      // 3. Atualizar estado do React
+      setProfile({ ...updatedUser })
+      setUser({ ...updatedUser })
+      
+      addToast('Avatar atualizado! ✅')
     }
     reader.readAsDataURL(file)
   }

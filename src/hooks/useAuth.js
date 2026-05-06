@@ -98,5 +98,5 @@ export function useAuth() {
     return PERMISSIONS[profile.role]?.includes(perm) || false;
   }
 
-  return { user, profile, currentUser: profile, loading, signIn, signOut, inviteMember, hasPermission, refreshUser }
+  return { user, profile, currentUser: profile, loading, signIn, signOut, inviteMember, hasPermission, refreshUser, setProfile, setUser }
 }
