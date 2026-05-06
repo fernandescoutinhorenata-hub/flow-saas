@@ -69,7 +69,7 @@ export function useAuth() {
     const { data } = await supabase
       .from('users')
       .select('*')
-      .eq('id', localUser.id)
+      .eq('email', localUser.email)
       .single()
     
     if (data) {
