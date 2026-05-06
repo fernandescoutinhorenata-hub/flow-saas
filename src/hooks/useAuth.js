@@ -79,5 +79,10 @@ export function useAuth() {
     }
   }
 
+  function hasPermission(perm) {
+    if (!profile) return false;
+    return PERMISSIONS[profile.role]?.includes(perm) || false;
+  }
+
   return { user, profile, currentUser: profile, loading, signIn, signOut, inviteMember, hasPermission, refreshUser }
 }

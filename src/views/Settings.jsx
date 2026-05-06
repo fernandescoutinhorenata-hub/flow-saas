@@ -6,7 +6,6 @@ import { useProjects } from '../hooks/useProjects.js';
 import { supabase } from '../lib/supabase'
 
 export default function Settings({ 
-  hasPermission, 
   addToast, 
   projects, 
   projectsLoading, 
@@ -15,9 +14,10 @@ export default function Settings({
   deleteProject, 
   addMember, 
   removeMember,
-  users 
+  users,
+  toggleUserActive
 }) {
-  const { currentUser, inviteMember, refreshUser } = useAuth();
+  const { currentUser, inviteMember, refreshUser, hasPermission } = useAuth();
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -122,17 +122,8 @@ export default function Settings({
     reader.onload = async (event) => {
       const base64 = event.target.result
       
-      const { error } = await supabase
-        .from('users')
-        .update({ avatar_url: base64 })
-        .eq('id', currentUser.id)
-      
-      if (error) {
-        addToast('Erro ao salvar avatar.')
-        return
-      }
-      
-      // Atualizar dados localmente e sincronizar sem reload
+      await supabase.from('users').update({ avatar_url: base64 }).eq('id', currentUser.id)
+      localStorage.setItem('flow_user', JSON.stringify({ ...currentUser, avatar_url: base64 }))
       await refreshUser()
       addToast('Avatar atualizado!')
     }
