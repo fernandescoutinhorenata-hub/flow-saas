@@ -11,9 +11,23 @@ export function useAuth() {
     const saved = localStorage.getItem('flow_user')
     if (saved) {
       try {
-        const userData = JSON.parse(saved)
-        setProfile(userData)
-        setUser(userData)
+        const localUser = JSON.parse(saved)
+        setProfile(localUser)
+        setUser(localUser)
+        
+        // Buscar dados frescos do banco incluindo avatar_url
+        supabase
+          .from('users')
+          .select('*')
+          .eq('email', localUser.email)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              localStorage.setItem('flow_user', JSON.stringify(data))
+              setProfile({ ...data })
+              setUser({ ...data })
+            }
+          })
       } catch {
         localStorage.removeItem('flow_user')
       }
