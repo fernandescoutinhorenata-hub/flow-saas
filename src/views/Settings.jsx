@@ -122,19 +122,9 @@ export default function Settings({
     reader.onload = async (event) => {
       const base64 = event.target.result
       
-      console.log('1. Salvando no banco...')
-      const { error } = await supabase.from('users').update({ avatar_url: base64 }).eq('id', currentUser.id)
-      console.log('2. Erro banco:', error)
-      
-      console.log('3. Salvando no localStorage...')
+      await supabase.from('users').update({ avatar_url: base64 }).eq('id', currentUser.id)
       localStorage.setItem('flow_user', JSON.stringify({ ...currentUser, avatar_url: base64 }))
-      
-      console.log('4. Chamando refreshUser...')
       await refreshUser()
-      
-      console.log('5. currentUser após refresh:', currentUser)
-      console.log('6. avatar_url:', currentUser?.avatar_url)
-      
       addToast('Avatar atualizado!')
     }
     reader.readAsDataURL(file)

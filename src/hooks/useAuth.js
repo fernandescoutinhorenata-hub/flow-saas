@@ -74,8 +74,8 @@ export function useAuth() {
     
     if (data) {
       localStorage.setItem('flow_user', JSON.stringify(data))
-      setProfile(data)
-      setUser(data)
+      setProfile({ ...data })
+      setUser({ ...data })
     }
   }
 
