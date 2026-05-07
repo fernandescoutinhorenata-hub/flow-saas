@@ -3,11 +3,12 @@ import Avatar from './Avatar.jsx';
 import { PRIORITY_COLORS, PRIORITY_LABELS, COLUMNS } from '../data.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, onAccept }) {
+export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, onAccept, addToast }) {
   const { currentUser, hasPermission } = useAuth();
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
   const [description, setDescription] = useState(task?.description || '');
+  const [descChanged, setDescChanged] = useState(false);
   const taskSubtasks = task.subtasks || { done: 0, total: 0 };
   const [subtasks, setSubtasks] = useState(
     Array.from({ length: taskSubtasks.total || 0 }, (_, i) => ({ id: i, label: `Subtarefa ${i + 1}`, done: i < (taskSubtasks.done || 0) }))
@@ -33,9 +34,9 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
   }
 
   async function saveDescription() {
-    if (description !== task?.description) {
-      await onUpdate(task.id, { description })
-    }
+    await onUpdate(task.id, { description })
+    setDescChanged(false)
+    addToast?.('Descrição salva!')
   }
 
   function handleSave() {
@@ -131,27 +132,36 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
             {/* Description */}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Descrição</label>
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                onBlur={saveDescription}
-                placeholder="Adicionar descrição..."
-                style={{
-                  width: '100%',
-                  minHeight: 100,
-                  background: 'var(--bg-base)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 8,
-                  padding: '10px 12px',
-                  color: 'var(--text-primary)',
-                  fontSize: 14,
-                  resize: 'vertical',
-                  outline: 'none',
-                  fontFamily: "'DM Sans', sans-serif",
-                  lineHeight: 1.5
-                }}
-                onFocus={e => e.target.style.borderColor = '#00FF87'}
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <textarea
+                  value={description}
+                  onChange={e => { setDescription(e.target.value); setDescChanged(true) }}
+                  placeholder="Adicionar descrição..."
+                  style={{
+                    width: '100%',
+                    minHeight: 100,
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    resize: 'vertical',
+                    outline: 'none',
+                    fontFamily: "'DM Sans', sans-serif"
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#00FF87'}
+                  onBlur={e => e.target.style.borderColor = descChanged ? '#00FF87' : 'var(--border)'}
+                />
+                {descChanged && (
+                  <button
+                    onClick={saveDescription}
+                    style={{ alignSelf: 'flex-end', background: '#00FF87', color: '#0D0D0D', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    Salvar
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Subtasks */}

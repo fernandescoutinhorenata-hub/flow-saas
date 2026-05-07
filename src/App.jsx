@@ -484,6 +484,7 @@ export default function App() {
           onUpdate={updateTask}
           onDelete={handleDeleteTask}
           onAccept={handleAcceptTask}
+          addToast={addToast}
         />
       )}
       {showNewTask && (
