@@ -122,15 +122,15 @@ export default function App() {
     addToast("Tarefa excluída.");
   }
 
-  function handleCreateTask({ title, priority, due, status }) {
+  function handleCreateTask({ title, priority, due_date, status, description }) {
     const newTask = {
       title,
       priority,
-      due_date: due,
+      due_date,
       status,
       assignee: null,
       assignee_initials: null,
-      description: "",
+      description: description || "",
       position: (tasks || []).length
     };
     createTask(newTask);
@@ -481,6 +481,7 @@ export default function App() {
           task={activeModal}
           onClose={() => setActiveModal(null)}
           onSave={handleSaveTask}
+          onUpdate={updateTask}
           onDelete={handleDeleteTask}
           onAccept={handleAcceptTask}
         />

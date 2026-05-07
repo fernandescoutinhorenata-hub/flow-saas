@@ -3,11 +3,11 @@ import Avatar from './Avatar.jsx';
 import { PRIORITY_COLORS, PRIORITY_LABELS, COLUMNS } from '../data.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskModal({ task, onClose, onSave, onDelete, onAccept }) {
+export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, onAccept }) {
   const { currentUser, hasPermission } = useAuth();
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
-  const [desc, setDesc] = useState(task.description || "");
+  const [description, setDescription] = useState(task?.description || '');
   const taskSubtasks = task.subtasks || { done: 0, total: 0 };
   const [subtasks, setSubtasks] = useState(
     Array.from({ length: taskSubtasks.total || 0 }, (_, i) => ({ id: i, label: `Subtarefa ${i + 1}`, done: i < (taskSubtasks.done || 0) }))
@@ -32,15 +32,15 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
     setSubtasks(prev => prev.map(s => s.id === id ? { ...s, done: !s.done } : s));
   }
 
-  async function handleDescriptionBlur() {
-    if (desc !== task.description) {
-      onSave({ ...task, title, description: desc, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
+  async function saveDescription() {
+    if (description !== task?.description) {
+      await onUpdate(task.id, { description })
     }
   }
 
   function handleSave() {
     if (!canEdit) return;
-    onSave({ ...task, title, description: desc, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
+    onSave({ ...task, title, description: description, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
   }
 
   const pBtns = [
@@ -132,9 +132,9 @@ export default function TaskModal({ task, onClose, onSave, onDelete, onAccept })
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Descrição</label>
               <textarea
-                value={desc}
-                onChange={e => setDesc(e.target.value)}
-                onBlur={handleDescriptionBlur}
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                onBlur={saveDescription}
                 placeholder="Adicionar descrição..."
                 style={{
                   width: '100%',

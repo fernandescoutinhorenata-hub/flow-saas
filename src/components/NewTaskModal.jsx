@@ -7,10 +7,11 @@ export default function NewTaskModal({ onClose, onCreate, columns }) {
   const today = new Date().toISOString().split('T')[0];
   const [due, setDue] = useState(today);
   const [status, setStatus] = useState("backlog");
+  const [description, setDescription] = useState('');
 
   function handleCreate() {
     if (!title.trim()) return;
-    onCreate({ title, priority, due, status });
+    onCreate({ title, priority, due_date: due, status, description });
   }
 
   return (
@@ -89,6 +90,32 @@ export default function NewTaskModal({ onClose, onCreate, columns }) {
                   fontFamily: "'DM Sans', sans-serif",
                   colorScheme: "dark",
                 }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                OBSERVAÇÃO
+              </label>
+              <textarea
+                placeholder="Adicionar observação..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: 80,
+                  background: 'var(--bg-base)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  resize: 'none',
+                  outline: 'none',
+                  fontFamily: "'DM Sans', sans-serif"
+                }}
+                onFocus={e => e.target.style.borderColor = '#00FF87'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
               />
             </div>
 
