@@ -47,8 +47,9 @@ export function useRegistros() {
       .insert([{
         ticket_id: ticketId,
         author_id: currentUser?.id,
-        author_name: currentUser?.name,
-        author_role: currentUser?.role,
+        author: currentUser?.name,
+        author_initials: currentUser?.initials,
+        role: currentUser?.role,
         text
       }])
     

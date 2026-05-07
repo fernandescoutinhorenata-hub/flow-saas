@@ -13,7 +13,8 @@ export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond
   const isAuthor = (ticket.author_id || ticket.authorId) === currentUser?.id;
   const canRespond = hasPermission("manage_members") || currentUser?.role === "gestor";
   const typeInfo = TICKET_TYPES[ticket.type];
-  const responses = ticket.ticket_responses || ticket.responses || [];
+  const responses = (ticket.ticket_responses || ticket.responses || [])
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,7 +103,7 @@ export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond
                         fontSize: 13,
                         lineHeight: 1.5
                       }}>
-                        {r.text}
+                        {r.content || r.text}
                       </div>
                       <span style={{ fontSize: 10, color: 'var(--text-disabled)', marginTop: 3 }}>
                         {r.author_name || r.author} • {r.created_at ? new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
