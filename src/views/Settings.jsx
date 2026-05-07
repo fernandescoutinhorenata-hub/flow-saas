@@ -141,7 +141,19 @@ export default function Settings({
       
       addToast('Avatar atualizado! ✅')
     }
-    reader.readAsDataURL(file)
+  async function handleSaveProfile() {
+    const { error } = await supabase
+      .from('users')
+      .update({ name: name, email: email })
+      .eq('id', currentUser.id)
+    
+    if (error) { addToast('Erro ao salvar perfil.'); return }
+    
+    const updated = { ...currentUser, name: name, email: email }
+    localStorage.setItem('flow_user', JSON.stringify(updated))
+    setProfile({ ...updated })
+    setUser({ ...updated })
+    addToast('Perfil atualizado! ✅')
   }
 
   const tabs = ([
@@ -212,7 +224,7 @@ export default function Settings({
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 12px", borderRadius: 8, color: "var(--text-primary)", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }} />
                 </div>
               </div>
-              <button style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 500, alignSelf: "flex-start", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-dark)"} onMouseOut={e => e.currentTarget.style.background = "var(--accent)"}>Salvar Alterações</button>
+              <button onClick={handleSaveProfile} style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "12px 24px", borderRadius: 8, fontWeight: 500, alignSelf: "flex-start", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "var(--accent-dark)"} onMouseOut={e => e.currentTarget.style.background = "var(--accent)"}>Salvar Alterações</button>
             </div>
           )}
 

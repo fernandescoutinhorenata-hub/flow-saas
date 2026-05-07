@@ -3,7 +3,7 @@ import Avatar from './Avatar.jsx';
 import { PRIORITY_COLORS, PRIORITY_LABELS, COLUMNS } from '../data.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, onAccept, addToast }) {
+export default function TaskModal({ task, onClose, onUpdate, onDelete, addToast }) {
   const { currentUser, hasPermission } = useAuth();
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -20,7 +20,12 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
   const isAvailable = !task.assignee;
   const isOwner = (task.assignee_initials || task.assigneeInitials) === currentUser?.initials;
   
-  const canEdit = !isAvailable && (hasPermission("edit_any_task") || (isOwner && currentUser?.role === "membro"));
+  const canEdit = hasPermission("edit_any_task") || 
+                  hasPermission("manage_tasks") || 
+                  isOwner || 
+                  currentUser?.role === "dono" || 
+                  currentUser?.role === "gestor" ||
+                  currentUser?.role === "membro";
   const showDelete = !isAvailable && (hasPermission("delete_task") || (isOwner && currentUser?.role === "gestor"));
 
   useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
@@ -40,9 +45,15 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
   }
 
   async function handleSave() {
-    await onUpdate(task.id, { description })
+    await onUpdate(task.id, { 
+      description,
+      title,
+      priority,
+      due_date: due
+    })
     setHasChanges(false)
     addToast?.('Tarefa salva!')
+    onClose()
   }
 
 
@@ -85,7 +96,7 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
               <input
                 ref={titleRef}
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={e => { setTitle(e.target.value); setHasChanges(true) }}
                 onBlur={() => setEditingTitle(false)}
                 onKeyDown={e => e.key === "Enter" && setEditingTitle(false)}
                 style={{
@@ -235,7 +246,7 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
               <input
                 type="date"
                 value={due}
-                onChange={e => setDue(e.target.value)}
+                onChange={e => { setDue(e.target.value); setHasChanges(true) }}
                 readOnly={!canEdit}
                 min={new Date().toISOString().split('T')[0]}
                 style={{
@@ -255,7 +266,7 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
                 {pBtns.map(b => (
                   <button
                     key={b.key}
-                    onClick={() => canEdit && setPriority(b.key)}
+                    onClick={() => { setPriority(b.key); setHasChanges(true) }}
                     style={{
                       flex: 1, padding: "7px 4px", borderRadius: 6, fontSize: 11, fontWeight: 500,
                       cursor: canEdit ? "pointer" : "default", transition: "all 0.15s",

@@ -480,10 +480,8 @@ export default function App() {
         <TaskModal
           task={activeModal}
           onClose={() => setActiveModal(null)}
-          onSave={handleSaveTask}
           onUpdate={updateTask}
           onDelete={handleDeleteTask}
-          onAccept={handleAcceptTask}
           addToast={addToast}
         />
       )}
