@@ -55,19 +55,27 @@ export default function Archive({ tasks = [], users = [] }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {(() => {
                           const assigneeUser = users?.find(u => 
-                            u.initials === task.assignee_initials || 
-                            u.id === task.assignee_id ||
+                            u.id === task.assignee_id || 
+                            u.initials === task.assignee_initials ||
                             u.name === task.assignee
                           );
+
+                          const creatorUser = users?.find(u =>
+                            u.id === task.created_by ||
+                            u.id === task.author_id
+                          );
+
+                          const displayUser = assigneeUser || creatorUser;
+
                           return (
                             <>
                               <Avatar 
-                                initials={assigneeUser?.initials || task.assignee_initials || '?'} 
-                                avatarUrl={assigneeUser?.avatar_url}
+                                initials={displayUser?.initials || task.assignee_initials || '?'} 
+                                avatarUrl={displayUser?.avatar_url}
                                 size={20} 
                               />
                               <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                                {assigneeUser?.name || task.assignee || 'Sem responsável'}
+                                {assigneeUser ? assigneeUser.name : creatorUser ? `${creatorUser.name} (criou)` : 'Sem responsável'}
                               </span>
                             </>
                           );
