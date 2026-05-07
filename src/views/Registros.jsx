@@ -9,7 +9,8 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
   const { currentUser } = useAuth();
   const [filter, setFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [activeTicket, setActiveTicket] = useState(null);
+  const [activeTicketId, setActiveTicketId] = useState(null);
+  const activeTicket = (tickets || []).find(t => t.id === activeTicketId) || null;
   const [showNew, setShowNew] = useState(false);
 
   const myTickets = (tickets || []).filter(t => {
@@ -68,7 +69,7 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
       {/* List */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
         {(filtered || []).map(t => (
-          <TicketCard key={t.id} ticket={t} onClick={() => setActiveTicket(t)} />
+          <TicketCard key={t.id} ticket={t} onClick={() => setActiveTicketId(t.id)} />
         ))}
         {(filtered || []).length === 0 && (
           <div style={{ gridColumn: "1/-1", padding: 64, textAlign: "center", color: "var(--text-disabled)", border: "1px dashed var(--border)", borderRadius: 12 }}>
@@ -80,7 +81,7 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
       {activeTicket && (
         <TicketModal
           ticket={activeTicket}
-          onClose={() => setActiveTicket(null)}
+          onClose={() => setActiveTicketId(null)}
           onUpdateStatus={onUpdateStatus}
           onRespond={onRespond}
           onDelete={onDelete}

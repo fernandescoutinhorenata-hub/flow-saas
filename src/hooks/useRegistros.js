@@ -41,9 +41,17 @@ export function useRegistros() {
     await fetchTickets()
   }
 
-  async function respondTicket(ticketId, response) {
-    const { error } = await supabase.from('ticket_responses')
-      .insert([{ ...response, ticket_id: ticketId }])
+  async function respondTicket(ticketId, text) {
+    const { error } = await supabase
+      .from('ticket_responses')
+      .insert([{
+        ticket_id: ticketId,
+        author_id: currentUser?.id,
+        author_name: currentUser?.name,
+        author_role: currentUser?.role,
+        text
+      }])
+    
     if (error) {
       console.error('Erro ao responder ticket:', error)
       return

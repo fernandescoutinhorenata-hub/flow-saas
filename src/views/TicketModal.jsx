@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { TICKET_TYPES, TICKET_STATUS } from '../data.js';
 import Avatar from '../components/Avatar.jsx';
@@ -6,11 +6,26 @@ import { timeAgo } from '../utils.js';
 
 export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond, onDelete }) {
   const { currentUser, hasPermission } = useAuth();
-  const [responseText, setResponseText] = useState("");
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const chatBottomRef = useRef(null);
+  
   const isAuthor = (ticket.author_id || ticket.authorId) === currentUser?.id;
   const canRespond = hasPermission("manage_members") || currentUser?.role === "gestor";
   const typeInfo = TICKET_TYPES[ticket.type];
   const responses = ticket.ticket_responses || ticket.responses || [];
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [responses.length]);
+
+  async function handleSend() {
+    if (!replyText.trim() || sending) return;
+    setSending(true);
+    await onRespond(ticket.id, replyText.trim());
+    setReplyText('');
+    setSending(false);
+  }
 
   return (
     <div className="anim-fadeIn" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -47,46 +62,99 @@ export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond
               </div>
             )}
 
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 16 }}>Respostas</label>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {(responses || []).map(r => (
-                  <div key={r.id} style={{ background: "var(--bg-surface)", borderRadius: 8, padding: 16, border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <Avatar initials={r.author_initials || r.authorInitials} size={24} />
-                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{r.author_name || r.author}</span>
-                        {(r.author_role || r.role) && <span style={{ fontSize: 10, fontWeight: 700, color: (r.author_role || r.role) === "admin" ? "var(--accent)" : "#FFB800", textTransform: "uppercase", background: "rgba(0,0,0,0.3)", padding: "1px 5px", borderRadius: 3 }}>{r.author_role || r.role}</span>}
-                      </div>
-                      <span style={{ fontSize: 11, color: "var(--text-disabled)" }}>{timeAgo(r.created_at || r.createdAt)}</span>
-                    </div>
-                    <p style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: 1.5 }}>{r.text}</p>
-                  </div>
-                ))}
-                {(responses || []).length === 0 && (
-                  <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-disabled)", fontStyle: "italic" }}>
-                    Aguardando resposta da equipe...
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Chat de respostas */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                CONVERSA ({responses.length})
+              </label>
 
-            {canRespond ? (
-              <div style={{ marginTop: "auto", paddingTop: 24, borderTop: "1px solid var(--border)" }}>
-                <textarea
-                  value={responseText}
-                  onChange={e => setResponseText(e.target.value)}
-                  placeholder="Escreva sua resposta..."
-                  style={{ width: "100%", height: 100, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, padding: 12, color: "var(--text-primary)", outline: "none", fontFamily: "inherit", resize: "none", marginBottom: 12 }}
+              {/* Área do chat */}
+              <div style={{
+                background: 'var(--bg-base)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: 12,
+                maxHeight: 260,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10
+              }}>
+                {responses.length === 0 && (
+                  <span style={{ fontSize: 12, color: 'var(--text-disabled)', fontStyle: 'italic' }}>
+                    Nenhuma resposta ainda.
+                  </span>
+                )}
+                {responses.map((r, i) => {
+                  const isMe = r.author_id === currentUser?.id || r.author_name === currentUser?.name;
+                  return (
+                    <div key={r.id || i} style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: isMe ? 'flex-end' : 'flex-start'
+                    }}>
+                      <div style={{
+                        maxWidth: '80%',
+                        background: isMe ? 'var(--accent)' : 'var(--bg-card)',
+                        color: isMe ? '#0a0a0a' : 'var(--text-primary)',
+                        borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                        padding: '8px 12px',
+                        fontSize: 13,
+                        lineHeight: 1.5
+                      }}>
+                        {r.text}
+                      </div>
+                      <span style={{ fontSize: 10, color: 'var(--text-disabled)', marginTop: 3 }}>
+                        {r.author_name || r.author} • {r.created_at ? new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div ref={chatBottomRef} />
+              </div>
+
+              {/* Input de resposta */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <input
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                  placeholder="Digite sua resposta..."
+                  style={{
+                    flex: 1,
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    padding: '9px 12px',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    outline: 'none',
+                    fontFamily: "'DM Sans', sans-serif"
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#00FF87'}
+                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
                 />
                 <button
-                  onClick={() => { onRespond(ticket.id, responseText); setResponseText(""); }}
-                  style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", padding: "10px 24px", borderRadius: 8, fontWeight: 600, cursor: "pointer", float: "right" }}
-                >Responder</button>
+                  onClick={handleSend}
+                  disabled={sending || !replyText.trim()}
+                  style={{
+                    background: sending || !replyText.trim() ? 'var(--bg-card)' : '#00FF87',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '9px 16px',
+                    color: sending || !replyText.trim() ? 'var(--text-disabled)' : '#0a0a0a',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: sending || !replyText.trim() ? 'default' : 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    transition: 'all 0.15s',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {sending ? '...' : 'Enviar'}
+                </button>
               </div>
-            ) : (
-              <div style={{ textAlign: "center", color: "var(--text-disabled)", fontSize: 12, marginTop: 16 }}>Apenas administradores podem responder</div>
-            )}
+            </div>
           </div>
 
           {/* Right Column */}

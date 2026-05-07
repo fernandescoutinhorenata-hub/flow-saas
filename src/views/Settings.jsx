@@ -141,6 +141,9 @@ export default function Settings({
       
       addToast('Avatar atualizado! ✅')
     }
+    reader.readAsDataURL(file)
+  }
+
   async function handleSaveProfile() {
     const { error } = await supabase
       .from('users')

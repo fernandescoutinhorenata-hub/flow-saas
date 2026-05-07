@@ -171,14 +171,7 @@ export default function App() {
   }
 
   function handleRespondTicket(ticketId, text) {
-    const response = {
-      author_id: currentUser?.id,
-      author_name: currentUser?.name,
-      author_initials: currentUser?.initials,
-      author_role: currentUser?.role,
-      text,
-    };
-    respondTicket(ticketId, response);
+    respondTicket(ticketId, text);
     addToast("Resposta enviada.");
   }
 
