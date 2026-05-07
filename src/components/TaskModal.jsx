@@ -14,7 +14,7 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete, addToast 
     Array.from({ length: taskSubtasks.total || 0 }, (_, i) => ({ id: i, label: `Subtarefa ${i + 1}`, done: i < (taskSubtasks.done || 0) }))
   );
   const [priority, setPriority] = useState(task.priority);
-  const [due, setDue] = useState(task.due);
+  const [due, setDue] = useState(task.due_date || task.due || '');
   const titleRef = useRef();
 
   const isAvailable = !task.assignee;

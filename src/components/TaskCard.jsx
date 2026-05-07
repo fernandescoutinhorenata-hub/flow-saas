@@ -9,7 +9,8 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
   const subtasks = task.subtasks || { done: 0, total: 0 };
   const tags = task.tags || [];
   const assigneeInitials = task.assignee_initials || task.assigneeInitials;
-  const overdue = isOverdue(task.due) && task.status !== "done";
+  const dueDate = task.due_date || task.due || null;
+  const overdue = isOverdue(dueDate) && task.status !== "done";
   const pColor = PRIORITY_COLORS[task.priority];
   const prog = subtasks.total > 0 ? subtasks.done / subtasks.total : 0;
   const isAvailable = !task.assignee;
@@ -83,7 +84,7 @@ export default function TaskCard({ task, onClick, isDragging, onDragStart, onDra
         )}
         
         <span style={{ fontSize: 12, color: overdue ? "#FF4C4C" : "var(--text-secondary)", flex: 1 }}>
-          {overdue && "⚠ "}{formatDate(task.due)}
+          {overdue && "⚠ "}{formatDate(dueDate)}
         </span>
 
         {isMine && !isAvailable && (
