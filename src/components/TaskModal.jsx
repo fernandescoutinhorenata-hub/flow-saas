@@ -8,7 +8,7 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
   const [description, setDescription] = useState(task?.description || '');
-  const [descChanged, setDescChanged] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const taskSubtasks = task.subtasks || { done: 0, total: 0 };
   const [subtasks, setSubtasks] = useState(
     Array.from({ length: taskSubtasks.total || 0 }, (_, i) => ({ id: i, label: `Subtarefa ${i + 1}`, done: i < (taskSubtasks.done || 0) }))
@@ -35,14 +35,16 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
 
   async function saveDescription() {
     await onUpdate(task.id, { description })
-    setDescChanged(false)
+    setHasChanges(false)
     addToast?.('Descrição salva!')
   }
 
-  function handleSave() {
-    if (!canEdit) return;
-    onSave({ ...task, title, description: description, priority, due, subtasks: { done: doneSub, total: subtasks.length } });
+  async function handleSave() {
+    await onUpdate(task.id, { description })
+    setHasChanges(false)
+    addToast?.('Tarefa salva!')
   }
+
 
   const pBtns = [
     { key: "low",    label: "Baixa",   color: "#00FF87" },
@@ -132,36 +134,26 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
             {/* Description */}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Descrição</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <textarea
-                  value={description}
-                  onChange={e => { setDescription(e.target.value); setDescChanged(true) }}
-                  placeholder="Adicionar descrição..."
-                  style={{
-                    width: '100%',
-                    minHeight: 100,
-                    background: 'var(--bg-base)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    padding: '10px 12px',
-                    color: 'var(--text-primary)',
-                    fontSize: 13,
-                    resize: 'vertical',
-                    outline: 'none',
-                    fontFamily: "'DM Sans', sans-serif"
-                  }}
-                  onFocus={e => e.target.style.borderColor = '#00FF87'}
-                  onBlur={e => e.target.style.borderColor = descChanged ? '#00FF87' : 'var(--border)'}
-                />
-                {descChanged && (
-                  <button
-                    onClick={saveDescription}
-                    style={{ alignSelf: 'flex-end', background: '#00FF87', color: '#0D0D0D', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
-                  >
-                    Salvar
-                  </button>
-                )}
-              </div>
+              <textarea
+                value={description}
+                onChange={e => { setDescription(e.target.value); setHasChanges(true) }}
+                placeholder="Adicionar descrição..."
+                style={{
+                  width: '100%',
+                  minHeight: 100,
+                  background: 'var(--bg-base)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  resize: 'vertical',
+                  outline: 'none',
+                  fontFamily: "'DM Sans', sans-serif"
+                }}
+                onFocus={e => e.target.style.borderColor = '#00FF87'}
+                onBlur={e => e.target.style.borderColor = hasChanges ? '#00FF87' : 'var(--border)'}
+              />
             </div>
 
             {/* Subtasks */}
@@ -288,12 +280,9 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
         </div>
 
         {/* Modal footer */}
-        <div style={{ padding: "16px 28px", borderTop: "1px solid var(--border)", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid var(--border)' }}>
           <button
-            onClick={() => {
-              onDelete(task.id)
-              onClose()
-            }}
+            onClick={() => { onDelete(task.id); onClose() }}
             style={{
               background: 'transparent',
               border: '1px solid #FF4C4C',
@@ -307,19 +296,23 @@ export default function TaskModal({ task, onClose, onSave, onUpdate, onDelete, o
           >
             Excluir tarefa
           </button>
-          {canEdit && (
-            <button
-              onClick={handleSave}
-              style={{
-                background: "var(--accent)", border: "none", borderRadius: 8,
-                color: "#0D0D0D", fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 500, fontSize: 14, padding: "9px 24px",
-                cursor: "pointer", transition: "background 0.2s",
-              }}
-              onMouseOver={e => e.target.style.background = "var(--accent-dark)"}
-              onMouseOut={e => e.target.style.background = "var(--accent)"}
-            >Salvar alterações</button>
-          )}
+
+          <button
+            onClick={handleSave}
+            style={{
+              background: '#00FF87',
+              border: 'none',
+              color: '#0a0a0a',
+              borderRadius: 8,
+              padding: '8px 20px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            Salvar
+          </button>
         </div>
       </div>
     </div>
