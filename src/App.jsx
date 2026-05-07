@@ -443,7 +443,7 @@ export default function App() {
 
         {activeNav === "archive" && (
           <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Archive tasks={archivedTasks} />
+            <Archive tasks={archivedTasks} users={users} />
           </main>
         )}
       </div>

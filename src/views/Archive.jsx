@@ -2,7 +2,7 @@ import React from 'react';
 import Avatar from '../components/Avatar.jsx';
 import { formatDate } from '../utils.js';
 
-export default function Archive({ tasks = [] }) {
+export default function Archive({ tasks = [], users = [] }) {
   const getGroup = (dateStr) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -53,8 +53,25 @@ export default function Archive({ tasks = [] }) {
                     
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Avatar initials={task.assignee_initials} size={20} />
-                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{task.assignee}</span>
+                        {(() => {
+                          const assigneeUser = users?.find(u => 
+                            u.initials === task.assignee_initials || 
+                            u.id === task.assignee_id ||
+                            u.name === task.assignee
+                          );
+                          return (
+                            <>
+                              <Avatar 
+                                initials={assigneeUser?.initials || task.assignee_initials || '?'} 
+                                avatarUrl={assigneeUser?.avatar_url}
+                                size={20} 
+                              />
+                              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                {assigneeUser?.name || task.assignee || 'Sem responsável'}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-disabled)' }}>
                         Concluída em {new Date(task.updated_at).toLocaleDateString('pt-BR')}
