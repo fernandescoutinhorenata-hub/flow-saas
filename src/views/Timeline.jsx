@@ -3,7 +3,7 @@ import Avatar from '../components/Avatar.jsx';
 import { useTimeline } from '../hooks/useTimeline.js';
 import { timeAgo } from '../utils.js';
 
-export default function Timeline() {
+export default function Timeline({ users }) {
   const [period, setPeriod] = useState("week");
   const { events, loading } = useTimeline();
 
@@ -72,12 +72,14 @@ export default function Timeline() {
                 const isDone = item.new_status === 'done';
                 const isMoved = item.action.includes('moveu');
                 const color = isDone ? 'var(--status-ok)' : (isMoved ? 'var(--status-medium)' : 'var(--text-secondary)');
+                const user = users?.find(u => u.name === item.user_name);
+                const avatarUrl = user?.avatar_url;
                 const initials = item.user_name ? item.user_name.substring(0, 2).toUpperCase() : '??';
 
                 return (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
                     <div style={{ position: "absolute", left: -29, width: 10, height: 10, borderRadius: "50%", background: color, border: "2px solid var(--bg-base)", zIndex: 2 }} />
-                    <Avatar initials={initials} size={28} />
+                    <Avatar initials={initials} avatarUrl={avatarUrl} size={28} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{item.user_name} {item.action}</span>
                       <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{timeAgo(item.created_at)}</span>

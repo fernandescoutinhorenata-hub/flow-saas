@@ -411,7 +411,7 @@ export default function App() {
 
         {activeNav === "timeline" && (
           <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Timeline />
+            <Timeline users={users} />
           </main>
         )}
 
