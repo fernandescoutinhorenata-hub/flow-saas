@@ -1,22 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useProjects(currentUser) {
   const [projects, setProjects] = useState([])
   const [selectedProject, setSelectedProject] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => currentUser != null)
 
-  useEffect(() => {
-    if (!currentUser) {
-      setLoading(false)
-      return
-    }
-    fetchProjects()
-    const interval = setInterval(fetchProjects, 5000)
-    return () => clearInterval(interval)
-  }, [currentUser])
-
-  async function fetchProjects() {
+  const fetchProjects = useCallback(async () => {
     try {
       const isDono = currentUser?.role === 'dono'
       const isGestor = currentUser?.role === 'gestor'
@@ -25,7 +15,7 @@ export function useProjects(currentUser) {
       let query = supabase.from('projects').select(`*, project_members(user_id)`)
 
       const { data, error } = await query.order('created_at', { ascending: true })
-      
+
       if (error) {
         console.error('Error fetching projects:', error)
         return
@@ -41,27 +31,32 @@ export function useProjects(currentUser) {
       }
 
       setProjects(filtered)
-      
+
       // Se tivermos projetos e nenhum selecionado (ou o selecionado não existe mais no filtro), seleciona o primeiro
-      if (filtered.length > 0) {
-        if (!selectedProject || !filtered.find(p => p.id === selectedProject.id)) {
-          setSelectedProject(filtered[0])
-        }
-      } else {
-        setSelectedProject(null)
-      }
+      setSelectedProject(prev => {
+        if (filtered.length === 0) return null
+        if (!prev || !filtered.find(p => p.id === prev.id)) return filtered[0]
+        return prev
+      })
     } catch (err) {
       console.error('Error in fetchProjects:', err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUser])
+
+  useEffect(() => {
+    if (!currentUser) return
+    fetchProjects()
+    const interval = setInterval(fetchProjects, 5000)
+    return () => clearInterval(interval)
+  }, [currentUser, fetchProjects])
 
   async function createProject({ name, fase = 'planejamento' }) {
-    const { error } = await supabase.from('projects').insert([{ 
-      name, 
-      fase, 
-      status: 'em andamento' 
+    const { error } = await supabase.from('projects').insert([{
+      name,
+      fase,
+      status: 'em andamento'
     }])
     if (error) throw error
     await fetchProjects()
@@ -76,16 +71,13 @@ export function useProjects(currentUser) {
   async function deleteProject(id) {
     const { error } = await supabase.from('projects').delete().eq('id', id)
     if (error) throw error
-    if (selectedProject?.id === id) {
-      setSelectedProject(null)
-    }
     await fetchProjects()
   }
 
   async function addMember(projectId, userId) {
-    const { error } = await supabase.from('project_members').insert([{ 
-      project_id: projectId, 
-      user_id: userId 
+    const { error } = await supabase.from('project_members').insert([{
+      project_id: projectId,
+      user_id: userId
     }])
     if (error) throw error
     await fetchProjects()
@@ -101,15 +93,15 @@ export function useProjects(currentUser) {
     await fetchProjects()
   }
 
-  return { 
-    projects, 
-    selectedProject, 
-    setSelectedProject, 
-    loading, 
-    createProject, 
-    updateProject, 
-    deleteProject, 
-    addMember, 
-    removeMember 
+  return {
+    projects,
+    selectedProject,
+    setSelectedProject,
+    loading,
+    createProject,
+    updateProject,
+    deleteProject,
+    addMember,
+    removeMember
   }
 }

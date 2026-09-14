@@ -3,9 +3,9 @@ import Avatar from '../components/Avatar.jsx';
 import { useDashboard } from '../hooks/useDashboard.js';
 
 export default function Dashboard({ onTaskClick }) {
-  const { stats, refetch } = useDashboard();
+  const { stats, loading } = useDashboard();
 
-  if (!stats.total && !stats.doing && !stats.done && !stats.overdue && !stats.byMember.length) {
+  if (loading) {
     return (
       <div className="anim-fadeInUp" style={{ flex: 1, padding: "24px 32px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 24 }}>
         <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>Dashboard</h2>

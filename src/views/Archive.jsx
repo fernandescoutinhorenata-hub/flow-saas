@@ -1,6 +1,5 @@
 import React from 'react';
 import Avatar from '../components/Avatar.jsx';
-import { formatDate } from '../utils.js';
 
 export default function Archive({ tasks = [], users = [] }) {
   const getGroup = (dateStr) => {

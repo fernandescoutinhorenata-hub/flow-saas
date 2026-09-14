@@ -22,7 +22,6 @@ export default function Column({ col, tasks, onCardClick, dragState, onDragStart
       onDrop={e => { setIsOver(false); onDrop(e, col.id); }}
     >
       <div style={{
-        background: "var(--bg-surface)",
         border: isOver ? "1px solid #00FF8730" : "1px solid var(--border)",
         borderRadius: 12,
         padding: 12,

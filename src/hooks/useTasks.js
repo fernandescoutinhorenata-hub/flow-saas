@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { logActivity } from '../lib/logActivity'
@@ -8,13 +8,7 @@ export function useTasks(projectId = null) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchTasks()
-    const interval = setInterval(fetchTasks, 3000)
-    return () => clearInterval(interval)
-  }, [projectId])
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       let query = supabase
         .from('tasks')
@@ -37,7 +31,13 @@ export function useTasks(projectId = null) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
+
+  useEffect(() => {
+    fetchTasks()
+    const interval = setInterval(fetchTasks, 3000)
+    return () => clearInterval(interval)
+  }, [fetchTasks])
 
   async function createTask(task) {
     const { data, error } = await supabase

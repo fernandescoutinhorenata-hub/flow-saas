@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { COLUMNS } from '../data.js';
 
 export default function NewTaskModal({ onClose, onCreate, columns }) {
   const [title, setTitle] = useState("");

@@ -1,33 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function usePedidos(projectId) {
   const [pedidos, setPedidos] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchPedidos()
-    const interval = setInterval(fetchPedidos, 3000)
-    return () => clearInterval(interval)
-  }, [projectId])
-
-  async function fetchPedidos() {
+  const fetchPedidos = useCallback(async () => {
     try {
-      const { data } = await supabase
+      let query = supabase
         .from('pedidos')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (projectId) {
+        query = query.eq('project_id', projectId)
+      }
+
+      const { data } = await query
       setPedidos(data || [])
-    } catch(err) {
+    } catch (err) {
       console.error('Erro pedidos:', err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
+
+  useEffect(() => {
+    fetchPedidos()
+    const interval = setInterval(fetchPedidos, 3000)
+    return () => clearInterval(interval)
+  }, [fetchPedidos])
 
   async function createPedido(pedido) {
-    const { error } = await supabase.from('pedidos').insert([{ 
-      ...pedido, 
+    const { error } = await supabase.from('pedidos').insert([{
+      ...pedido,
       status: 'pendente',
       project_id: projectId || null
     }])

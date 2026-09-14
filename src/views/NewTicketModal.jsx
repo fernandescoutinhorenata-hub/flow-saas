@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
 import { TICKET_TYPES } from '../data.js';
 
 export default function NewTicketModal({ onClose, onCreate }) {
-  const { currentUser } = useAuth();
   const [type, setType] = useState("duvida");
   const [priority, setPriority] = useState("normal");
   const [title, setTitle] = useState("");

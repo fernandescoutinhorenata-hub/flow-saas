@@ -3,7 +3,7 @@ import Avatar from './Avatar.jsx';
 import { PRIORITY_COLORS, PRIORITY_LABELS, COLUMNS } from '../data.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskModal({ task, onClose, onUpdate, onDelete, addToast }) {
+export default function TaskModal({ task, columns, onClose, onUpdate, onDelete, addToast }) {
   const { currentUser, hasPermission } = useAuth();
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -26,7 +26,6 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete, addToast 
                   currentUser?.role === "dono" || 
                   currentUser?.role === "gestor" ||
                   currentUser?.role === "membro";
-  const showDelete = !isAvailable && (hasPermission("delete_task") || (isOwner && currentUser?.role === "gestor"));
 
   useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
 
@@ -36,12 +35,6 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete, addToast 
   function toggleSub(id) {
     if (!canEdit) return;
     setSubtasks(prev => prev.map(s => s.id === id ? { ...s, done: !s.done } : s));
-  }
-
-  async function saveDescription() {
-    await onUpdate(task.id, { description })
-    setHasChanges(false)
-    addToast?.('Descrição salva!')
   }
 
   async function handleSave() {
@@ -284,7 +277,7 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete, addToast 
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Status</label>
               <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, color: "var(--text-primary)" }}>
-                {COLUMNS.find(c => c.id === task.status)?.label}
+                {(columns || COLUMNS).find(c => c.id === task.status)?.label || task.status}
               </div>
             </div>
           </div>

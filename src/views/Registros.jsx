@@ -14,7 +14,7 @@ export default function Registros({ tickets, onUpdateStatus, onCreate, onRespond
   const [showNew, setShowNew] = useState(false);
 
   const myTickets = (tickets || []).filter(t => {
-    if (currentUser && currentUser?.role === "membro") return t.authorId === currentUser?.id;
+    if (currentUser && currentUser?.role === "membro") return (t.author_id || t.authorId) === currentUser?.id;
     return true;
   });
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import Login from './components/Login.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Column from './components/Column.jsx';
@@ -7,15 +7,7 @@ import NewTaskModal from './components/NewTaskModal.jsx';
 import TweaksPanel from './components/TweaksPanel.jsx';
 import Toast from './components/Toast.jsx';
 import Avatar from './components/Avatar.jsx';
-import { INITIAL_TASKS, COLUMNS, INITIAL_TICKETS, PERMISSIONS } from './data.js';
-import { isOverdue, newId, timeAgo } from './utils.js';
-import Registros from './views/Registros.jsx';
-import Dashboard from './views/Dashboard.jsx';
-import Timeline from './views/Timeline.jsx';
-import Reports from './views/Reports.jsx';
-import Producao from './views/Producao.jsx';
-import Settings from './views/Settings.jsx';
-import Archive from './views/Archive.jsx';
+import { isOverdue } from './utils.js';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NewColumnButton from './components/NewColumnGhost.jsx';
 import RoleSelector from './components/RoleSelector.jsx';
@@ -25,12 +17,30 @@ import { useColumns } from './hooks/useColumns.js';
 import { useRegistros } from './hooks/useRegistros.js';
 import { useProjects } from './hooks/useProjects.js';
 import { useUsers } from './hooks/useUsers.js';
+
+const Registros = React.lazy(() => import('./views/Registros.jsx'));
+const Dashboard = React.lazy(() => import('./views/Dashboard.jsx'));
+const Timeline = React.lazy(() => import('./views/Timeline.jsx'));
+const Reports = React.lazy(() => import('./views/Reports.jsx'));
+const Producao = React.lazy(() => import('./views/Producao.jsx'));
+const Settings = React.lazy(() => import('./views/Settings.jsx'));
+const Archive = React.lazy(() => import('./views/Archive.jsx'));
+
+function PageLoader() {
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--text-secondary)', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>
+      <span className="anim-pulse">FLOW</span>
+      <span>carregando...</span>
+    </div>
+  );
+}
+
 export default function App() {
-  const { user, profile, currentUser, loading: authLoading, hasPermission, signOut } = useAuth();
+  const { user, currentUser, loading: authLoading, signOut } = useAuth();
   const { projects, selectedProject, setSelectedProject, createProject, updateProject, deleteProject, addMember, removeMember, loading: projectsLoading } = useProjects(currentUser);
   const { users, toggleUserActive } = useUsers();
   
-  const { tasks, archivedTasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
+  const { tasks, archivedTasks, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
   const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
   
@@ -62,8 +72,6 @@ export default function App() {
       setTimeout(() => setToasts(prev => (prev || []).filter(t => t.id !== id)), 350);
     }, 2800);
   }
-
-  function handleLogin() { /* Não necessário mais com Auth real */ }
 
   function handleDragStart(e, taskId) {
     e.dataTransfer.effectAllowed = "move";
@@ -109,12 +117,6 @@ export default function App() {
   }
 
   function handleCardClick(task) { setActiveModal(task); }
-
-  function handleSaveTask(updated) {
-    updateTask(updated.id, updated);
-    setActiveModal(null);
-    addToast("Tarefa salva com sucesso.");
-  }
 
   function handleDeleteTask(id) {
     deleteTask(id);
@@ -164,6 +166,7 @@ export default function App() {
       ...data,
       author_id: currentUser?.id,
       author_initials: currentUser?.initials,
+      author: currentUser?.name,
       status: "aberto",
     };
     createTicket(newTicket);
@@ -187,7 +190,7 @@ export default function App() {
 
   const filteredTasks = (tasks || []).filter(t => {
     if (filter === "mine") return t.assignee === "Você" || t.assignee_initials === currentUser?.initials;
-    if (filter === "overdue") return isOverdue(t.due) && t.status !== "done";
+    if (filter === "overdue") return isOverdue(t.due_date || t.due) && t.status !== "done";
     return true;
   });
 
@@ -286,7 +289,7 @@ export default function App() {
 
         {/* Filters — ocultos no mobile via CSS */}
         <div className="header-filters" style={{ display: "flex", gap: 2 }}>
-          {([{ key: "all", label: "Todas" }, { key: "mine", label: "Minhas" }, { key: "overdue", label: "Atrasadas" }] || []).map(f => (
+          {[{ key: "all", label: "Todas" }, { key: "mine", label: "Minhas" }, { key: "overdue", label: "Atrasadas" }].map(f => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
@@ -348,6 +351,7 @@ export default function App() {
           setMobileOpen={setMobileOpen}
         />
 
+        <Suspense fallback={<PageLoader />}>
         {activeNav === "board" && (
           <main className="kanban-board" style={{
             flex: 1, overflowX: "auto", overflowY: "hidden",
@@ -446,6 +450,7 @@ export default function App() {
             <Archive tasks={archivedTasks} users={users} />
           </main>
         )}
+        </Suspense>
       </div>
 
       {/* Confirmation Modal for Column Removal */}
@@ -472,6 +477,7 @@ export default function App() {
       {activeModal && (
         <TaskModal
           task={activeModal}
+          columns={columns}
           onClose={() => setActiveModal(null)}
           onUpdate={updateTask}
           onDelete={handleDeleteTask}

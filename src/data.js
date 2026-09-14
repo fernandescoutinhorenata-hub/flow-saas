@@ -19,8 +19,6 @@ export const COLUMNS = [
 export const PRIORITY_COLORS = { urgent: "#FF4C4C", medium: "#FFB800", low: "#00FF87" };
 export const PRIORITY_LABELS = { urgent: "Urgente", medium: "Média", low: "Baixa" };
 
-export const TODAY = new Date("2026-06-09");
-
 export const INITIAL_TICKETS = [
   { id: 1, type: "duvida", title: "Como mover tarefa para revisão?", description: "Não estou conseguindo arrastar o card para a coluna revisão.", authorId: "u4", author: "João P.", authorInitials: "JP", taskId: 3, taskTitle: "Documentar fluxo de onboarding", status: "aberto", priority: "normal", createdAt: "2026-06-08T10:00:00", responses: [{ id: 1, authorId: "u1", author: "Ana S.", authorInitials: "AS", role: "admin", text: "Olá João! Você pode arrastar segurando o botão esquerdo do mouse no card.", createdAt: "2026-06-08T11:30:00" }] },
   { id: 2, type: "problema", title: "Bug na tela de login", description: "Ao tentar entrar com magic link o sistema retorna erro 404.", authorId: "u3", author: "Carla T.", authorInitials: "CT", taskId: null, taskTitle: null, status: "em_analise", priority: "urgente", createdAt: "2026-06-07T14:00:00", responses: [] },

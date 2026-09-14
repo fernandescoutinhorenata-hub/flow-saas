@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useProjects } from '../hooks/useProjects.js';
 import { supabase } from '../lib/supabase'
 
 export default function Settings({ 
@@ -17,7 +16,7 @@ export default function Settings({
   users,
   toggleUserActive
 }) {
-  const { currentUser, inviteMember, refreshUser, hasPermission, setProfile, setUser } = useAuth();
+  const { currentUser, inviteMember, hasPermission, setProfile, setUser } = useAuth();
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -27,14 +26,6 @@ export default function Settings({
   // Estados de perfil controlados
   const [name, setName] = useState(currentUser?.name || '')
   const [email, setEmail] = useState(currentUser?.email || '')
-
-  // Sincroniza quando currentUser carrega de forma assíncrona
-  useEffect(() => {
-    if (currentUser) {
-      setName(currentUser?.name || '')
-      setEmail(currentUser?.email || '')
-    }
-  }, [currentUser])
   
   // Invite state
   const [showInvite, setShowInvite] = useState(false);
@@ -86,7 +77,7 @@ export default function Settings({
       setShowNewProject(false);
       setEditingProject(null);
       setNewProjectData({ name: '', description: '', fase: 'planejamento' });
-    } catch (err) {
+    } catch {
       addToast("❌ Erro ao salvar projeto.");
     } finally {
       setIsCreating(false);
@@ -100,7 +91,7 @@ export default function Settings({
       await deleteProject(confirmDeleteProject.id);
       addToast("✅ Projeto excluído com sucesso.");
       setConfirmDeleteProject(null);
-    } catch (err) {
+    } catch {
       addToast("❌ Erro ao excluir projeto.");
     } finally {
       setIsDeleting(false);
@@ -320,7 +311,7 @@ export default function Settings({
                                   await addMember(p.id, userId);
                                   addToast("✅ Membro adicionado ao projeto!");
                                   setShowMemberAdd(null);
-                                } catch (err) {
+                                } catch {
                                   addToast("❌ Erro ao adicionar membro.");
                                 }
                               }}
@@ -479,7 +470,7 @@ export default function Settings({
                   { id: "n2", label: "Prazo chegando (48h antes)" },
                   { id: "n3", label: "Tarefa movida de coluna" },
                   { id: "n4", label: "Comentário na minha tarefa" }
-                ] || []).map(n => (
+                ]).map(n => (
                   <div key={n.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: "1px solid var(--border)" }}>
                     <span style={{ fontSize: 14, color: "var(--text-primary)" }}>{n.label}</span>
                     <Toggle checked={notifs[n.id]} onChange={val => setNotifs({...notifs, [n.id]: val})} />
@@ -512,7 +503,7 @@ export default function Settings({
               <div>
                 <label style={{ fontSize: 11, color: "var(--text-secondary)", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 12, fontWeight: 600 }}>Densidade da Interface</label>
                 <div style={{ display: "flex", gap: 12 }}>
-                  {(["Confortável", "Compacto", "Ultra-compacto"] || []).map((d, i) => (
+                  {(["Confortável", "Compacto", "Ultra-compacto"]).map((d, i) => (
                     <button key={i} onClick={() => setDensity(d)} style={{ flex: 1, padding: "10px", background: density === d ? "var(--accent-soft)" : "var(--bg-card)", border: density === d ? "1px solid var(--accent)" : "1px solid var(--border)", borderRadius: 8, color: density === d ? "var(--accent)" : "var(--text-secondary)", cursor: "pointer", fontSize: 13, transition: "all 0.2s" }}>{d}</button>
                   ))}
                 </div>

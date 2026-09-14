@@ -4,7 +4,7 @@ import { formatDate, isOverdue } from '../utils.js';
 import { PRIORITY_COLORS } from '../data.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function TaskCard({ task, onClick, isDragging, onDragStart, onDragEnd, style: extStyle, animDelay, onAccept }) {
+export default function TaskCard({ task, onClick, isDragging, onDragStart, onDragEnd, style: extStyle, animDelay }) {
   const { currentUser } = useAuth();
   const subtasks = task.subtasks || { done: 0, total: 0 };
   const tags = task.tags || [];

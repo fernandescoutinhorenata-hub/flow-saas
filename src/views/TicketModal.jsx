@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { TICKET_TYPES, TICKET_STATUS } from '../data.js';
 import Avatar from '../components/Avatar.jsx';
-import { timeAgo } from '../utils.js';
 
 export default function TicketModal({ ticket, onClose, onUpdateStatus, onRespond, onDelete }) {
   const { currentUser, hasPermission } = useAuth();

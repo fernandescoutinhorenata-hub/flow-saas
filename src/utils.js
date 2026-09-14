@@ -1,6 +1,3 @@
-import { TODAY } from './data.js';
-export { TODAY };
-
 export const formatDate = (dateStr) => {
   if (!dateStr) return 'Sem prazo';
   const date = new Date(dateStr);
@@ -12,7 +9,9 @@ export function isOverdue(dateStr) {
   if (!dateStr) return false;
   const d = new Date(dateStr + "T00:00:00");
   if (isNaN(d.getTime())) return false;
-  return d < TODAY;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d < today;
 }
 
 export function getInitials(name) {

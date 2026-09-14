@@ -3,7 +3,6 @@ import { usePedidos } from '../hooks/usePedidos';
 
 export default function Producao({ selectedProject, addToast }) {
   const { pedidos, loading, createPedido, updatePedidoStatus, deletePedido } = usePedidos(selectedProject?.id);
-  console.log('PRODUCAO RENDERIZOU', { selectedProject, pedidos, loading })
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
