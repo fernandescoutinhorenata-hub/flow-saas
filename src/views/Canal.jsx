@@ -274,17 +274,17 @@ export default function Canal({ users, addToast }) {
       </div>
 
       {tab === 'pipeline' && (
-      <div className="kanban-board" style={{ display: 'flex', gap: 16, padding: 20, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
+      <div className="kanban-board" style={{ display: 'flex', gap: 10, padding: 16, flex: 1, alignItems: 'stretch', minWidth: 0 }}>
         {VIDEO_STAGES.map(stage => {
           const stageVideos = (videos || []).filter(v => v.status === stage.id)
           return (
             <div
               key={stage.id}
-              style={{ width: 260, flexShrink: 0, minHeight: 120 }}
+              style={{ flex: '1 1 0', minWidth: 150, display: 'flex', flexDirection: 'column', minHeight: 0 }}
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleDrop(e, stage.id)}
             >
-              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, minHeight: 120 }}>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 2px' }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{stage.label}</span>
                   <span style={{ background: 'var(--border)', color: 'var(--text-secondary)', fontSize: 11, padding: '2px 7px', borderRadius: 4 }}>{stageVideos.length}</span>
