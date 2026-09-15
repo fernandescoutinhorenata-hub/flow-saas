@@ -4,6 +4,7 @@ import BancoIdeias from './BancoIdeias.jsx'
 import { useContents, CONTENT_STAGES, PLATFORMS, FORMATS, DEFAULT_CHECKLIST } from '../hooks/useContents.js'
 import { useChannels } from '../hooks/useChannels.js'
 import { useUsers } from '../hooks/useUsers.js'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 import { formatDate } from '../utils.js'
 
 const PRIORITIES = [
@@ -275,6 +276,9 @@ export default function Producao({ addToast }) {
   const [editing, setEditing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [dragId, setDragId] = useState(null)
+  const [mobileStage, setMobileStage] = useState('ideias')
+  const [movingContent, setMovingContent] = useState(null)
+  const isMobile = useIsMobile()
 
   const today = new Date()
   const todayKey = localKey(today)
@@ -326,6 +330,16 @@ export default function Producao({ addToast }) {
       addToast('❌ Erro ao mover conteúdo.')
     }
     setDragId(null)
+  }
+
+  async function handleMoveContent(content, stageId) {
+    try {
+      await moveContent(content.id, stageId)
+      addToast(stageId === 'publicado' ? '✅ Conteúdo publicado!' : 'Conteúdo movido.')
+    } catch {
+      addToast('❌ Erro ao mover conteúdo.')
+    }
+    setMovingContent(null)
   }
 
   async function handleDelete() {
@@ -397,6 +411,43 @@ export default function Producao({ addToast }) {
       </div>
 
       {tab === 'esteira' && (
+        isMobile ? (
+          <div style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+              {CONTENT_STAGES.map(s => {
+                const count = filtered.filter(c => c.stage === s.id).length
+                const active = mobileStage === s.id
+                return (
+                  <button key={s.id} onClick={() => setMobileStage(s.id)} style={{ background: active ? 'var(--accent-soft)' : 'var(--bg-surface)', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', color: active ? 'var(--accent)' : 'var(--text-secondary)', borderRadius: 20, padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}>{s.label} ({count})</button>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filtered.filter(c => c.stage === mobileStage).map(c => {
+                const checklist = Array.isArray(c.checklist) ? c.checklist : []
+                const done = checklist.filter(i => i.done).length
+                const overdue = c.publish_date && c.publish_date < todayKey && c.stage !== 'publicado'
+                return (
+                  <div key={c.id} onClick={() => { setEditing(c); setShowModal(true) }} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${pColor(c.priority)}`, borderRadius: 10, padding: '14px', cursor: 'pointer' }}>
+                    <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500, marginBottom: 4 }}>{c.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, color: 'var(--accent)', background: 'var(--accent-soft)', padding: '1px 6px', borderRadius: 4 }}>{channelName(c.channel_id)}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{c.platform} · {c.format}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {c.publish_date && <span style={{ fontSize: 11, color: overdue ? '#FF4C4C' : 'var(--text-secondary)' }}>{overdue ? '⚠ ' : ''}{formatDate(c.publish_date)}</span>}
+                      {checklist.length > 0 && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{done}/{checklist.length} ✓</span>}
+                      <button onClick={e => { e.stopPropagation(); setMovingContent(c) }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 16, cursor: 'pointer', padding: 4 }} aria-label="Mover para outra etapa">⋯</button>
+                    </div>
+                  </div>
+                )
+              })}
+              {filtered.filter(c => c.stage === mobileStage).length === 0 && (
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-disabled)', border: '1px dashed var(--border)', borderRadius: 10, fontSize: 13 }}>Nenhum conteúdo nesta etapa.</div>
+              )}
+            </div>
+          </div>
+        ) : (
       <div style={{ display: 'flex', gap: 10, padding: 16, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
         {CONTENT_STAGES.map(stage => {
           const stageContents = filtered.filter(c => c.stage === stage.id)
@@ -454,10 +505,28 @@ export default function Producao({ addToast }) {
           )
         })}
       </div>
+        )
       )}
 
       {tab === 'ideias' && (
         <BancoIdeias addToast={addToast} />
+      )}
+
+      {/* Mover conteúdo (mobile) */}
+      {movingContent && (
+        <div className="mobile-more-overlay" onClick={() => setMovingContent(null)}>
+          <div className="mobile-more-sheet" onClick={e => e.stopPropagation()}>
+            <div className="mobile-more-sheet-header">
+              <span>Mover "{movingContent.title}"</span>
+              <button onClick={() => setMovingContent(null)} aria-label="Fechar">✕</button>
+            </div>
+            <div className="mobile-more-list">
+              {CONTENT_STAGES.map(s => (
+                <button key={s.id} onClick={() => handleMoveContent(movingContent, s.id)}>{s.label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {showModal && (

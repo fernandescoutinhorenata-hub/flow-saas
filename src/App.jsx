@@ -7,6 +7,7 @@ import Toast from './components/Toast.jsx';
 import Avatar from './components/Avatar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RoleSelector from './components/RoleSelector.jsx';
+import MobileNav from './components/MobileNav.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import { useTasks } from './hooks/useTasks.js';
 import { useRegistros } from './hooks/useRegistros.js';
@@ -133,7 +134,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div className="app-shell" style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
       <header style={{
         height: 56, background: "var(--bg-base)", borderBottom: "1px solid var(--border)",
@@ -214,7 +215,7 @@ export default function App() {
       </header>
 
       {/* Body */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <div className="app-body" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <Sidebar
           collapsed={sidebarCollapsed}
           activeNav={activeNav}
@@ -327,6 +328,9 @@ export default function App() {
 
       {/* Toasts */}
       <Toast toasts={toasts} />
+
+      {/* Navegação inferior (mobile) */}
+      <MobileNav activeNav={activeNav} setActiveNav={setActiveNav} />
 
       {/* Atualização do PWA */}
       {pwa.updateAvailable && (

@@ -5,6 +5,7 @@ import { useGoals } from '../hooks/useGoals.js'
 import { useChannels } from '../hooks/useChannels.js'
 import { useUsers } from '../hooks/useUsers.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 const DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 const PRIORITIES = [
@@ -256,6 +257,9 @@ export default function PlanejamentoSemanal({ selectedProject, addToast }) {
   const [goalModal, setGoalModal] = useState(null)
   const [showGoals, setShowGoals] = useState(true)
   const [dragId, setDragId] = useState(null)
+  const [mobileDay, setMobileDay] = useState('inbox')
+  const [moveTask, setMoveTask] = useState(null)
+  const isMobile = useIsMobile()
 
   const today = new Date()
   const todayKey = localKey(today)
@@ -384,6 +388,152 @@ export default function PlanejamentoSemanal({ selectedProject, addToast }) {
   }
 
   const pColor = (p) => PRIORITIES.find(x => x.key === p)?.color || '#7A7A7A'
+
+  async function handleMoveTask(task, dateKey) {
+    try {
+      await updateTask(task.id, { date: dateKey || null })
+      addToast('Tarefa movida.')
+    } catch {
+      addToast('❌ Erro ao mover tarefa.')
+    }
+    setMoveTask(null)
+  }
+
+  if (isMobile) {
+    const selectedTasks = mobileDay === 'inbox' ? inbox : (byDate[mobileDay] || [])
+    const dayLabel = mobileDay === 'inbox' ? 'Caixa de entrada' : (days.find(d => d.key === mobileDay)?.name || '')
+    const DAYS_SHORT = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM']
+
+    return (
+      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+        {/* Semana */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <button onClick={prevWeek} style={navBtn}>‹</button>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{fmtDate(weekStartKey)} — {fmtDate(weekEndKey)}</div>
+          <button onClick={nextWeek} style={navBtn}>›</button>
+        </div>
+
+        {/* Progresso */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ flex: 1, height: 8, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progressPct}%`, background: 'var(--accent)', borderRadius: 99 }} />
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{doneCount}/{weekTasks.length}</span>
+        </div>
+
+        {/* Filtros (compacto) */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+          {[{ key: 'all', label: 'Todas' }, { key: 'mine', label: 'Minhas' }, { key: 'overdue', label: 'Atrasadas' }, { key: 'pending', label: 'Pendentes' }, { key: 'done', label: 'Concluídas' }].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{ background: filter === f.key ? 'var(--accent-soft)' : 'var(--bg-surface)', border: filter === f.key ? '1px solid var(--accent)' : '1px solid var(--border)', color: filter === f.key ? 'var(--accent)' : 'var(--text-secondary)', borderRadius: 20, padding: '6px 14px', fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer' }}>{f.label}</button>
+          ))}
+        </div>
+
+        {/* Metas (recolhível) */}
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button onClick={() => setShowGoals(!showGoals)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', cursor: 'pointer' }}>
+              {showGoals ? '▾' : '▸'} Metas da semana
+            </button>
+            <button onClick={() => setGoalModal({})} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 13, cursor: 'pointer' }}>+</button>
+          </div>
+          {showGoals && (
+            weekGoals.length === 0 ? (
+              <p style={{ color: 'var(--text-disabled)', fontSize: 12, marginTop: 10 }}>Nenhuma meta cadastrada.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+                {weekGoals.map(g => {
+                  const target = Number(g.target)
+                  const cur = Number(g.current) || 0
+                  const pct = target > 0 ? Math.min(100, Math.round((cur / target) * 100)) : 0
+                  return (
+                    <div key={g.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-primary)', marginBottom: 4 }}>
+                        <span>{g.title}</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{cur}{target > 0 ? `/${target}` : ''}{g.unit ? ` ${g.unit}` : ''}</span>
+                      </div>
+                      <div style={{ height: 5, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--accent)', borderRadius: 99 }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Faixa de dias */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          <button onClick={() => setMobileDay('inbox')} style={{ background: mobileDay === 'inbox' ? 'var(--accent-soft)' : 'var(--bg-surface)', border: mobileDay === 'inbox' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 10, padding: '8px 10px', flexShrink: 0, cursor: 'pointer', textAlign: 'center', minWidth: 62 }}>
+            <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>INBOX</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: mobileDay === 'inbox' ? 'var(--accent)' : 'var(--text-primary)' }}>{inbox.length}</div>
+          </button>
+          {days.map((d, i) => {
+            const count = (byDate[d.key] || []).length
+            const active = mobileDay === d.key
+            const isToday = d.key === todayKey
+            return (
+              <button key={d.key} onClick={() => setMobileDay(d.key)} style={{ background: active ? 'var(--accent-soft)' : 'var(--bg-surface)', border: (isToday && !active) ? '1px solid var(--accent)' : (active ? '1px solid var(--accent)' : '1px solid var(--border)'), borderRadius: 10, padding: '8px 10px', flexShrink: 0, cursor: 'pointer', textAlign: 'center', minWidth: 52 }}>
+                <div style={{ fontSize: 10, color: isToday ? 'var(--accent)' : 'var(--text-secondary)' }}>{DAYS_SHORT[i]}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: active ? 'var(--accent)' : 'var(--text-primary)' }}>{d.date.getDate()}</div>
+                {count > 0 && <div style={{ fontSize: 9, color: 'var(--text-secondary)' }}>{count}</div>}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Tarefas do dia */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{dayLabel}</div>
+          {selectedTasks.length === 0 ? (
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-disabled)', fontSize: 13, border: '1px dashed var(--border)', borderRadius: 10 }}>
+              Nenhuma tarefa {mobileDay === 'inbox' ? 'sem data' : 'para este dia'}.
+            </div>
+          ) : selectedTasks.map(t => (
+            <div key={t.id} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${pColor(t.priority)}`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div onClick={() => toggleDone(t)} style={{ width: 20, height: 20, borderRadius: 6, border: t.done ? '1.5px solid var(--accent)' : '1.5px solid var(--border)', background: t.done ? 'var(--accent-soft)' : 'transparent', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {t.done && <span style={{ color: 'var(--accent)', fontSize: 12 }}>✓</span>}
+              </div>
+              <div onClick={() => { setEditingTask(t); setShowTaskModal(true) }} style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', textDecoration: t.done ? 'line-through' : 'none', opacity: t.done ? 0.6 : 1 }}>{t.title}</div>
+                {t.task_type && t.task_type !== 'tarefa' && <div style={{ fontSize: 10, color: 'var(--text-disabled)' }}>{t.task_type}</div>}
+              </div>
+              {t.assignee_initials && <Avatar initials={t.assignee_initials} size={20} />}
+              <button onClick={() => setMoveTask(t)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 16, cursor: 'pointer', padding: 4 }} title="Mover para">⋯</button>
+            </div>
+          ))}
+        </div>
+
+        {/* Botão flutuante Nova tarefa */}
+        <button onClick={() => { setEditingTask(null); setShowTaskModal(true) }} aria-label="Nova tarefa" style={{ position: 'fixed', right: 16, bottom: 'calc(74px + var(--safe-bottom))', width: 56, height: 56, borderRadius: '50%', background: 'var(--accent)', color: '#0D0D0D', border: 'none', fontSize: 28, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+
+        {/* Modal mover para */}
+        {moveTask && (
+          <div className="mobile-more-overlay" onClick={() => setMoveTask(null)}>
+            <div className="mobile-more-sheet" onClick={e => e.stopPropagation()}>
+              <div className="mobile-more-sheet-header">
+                <span>Mover "{moveTask.title}"</span>
+                <button onClick={() => setMoveTask(null)} aria-label="Fechar">✕</button>
+              </div>
+              <div className="mobile-more-list">
+                <button onClick={() => handleMoveTask(moveTask, null)}>Caixa de entrada</button>
+                {days.map(d => (
+                  <button key={d.key} onClick={() => handleMoveTask(moveTask, d.key)}>{d.name} — {d.date.getDate()}/{d.date.getMonth() + 1}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showTaskModal && (
+          <TaskFormModal task={editingTask} channels={channels} users={users} onClose={() => { setShowTaskModal(false); setEditingTask(null) }} onSave={handleSaveTask} onDelete={handleDeleteTask} />
+        )}
+        {goalModal && (
+          <GoalModal goal={goalModal.id ? goalModal : null} channels={channels} users={users} onClose={() => setGoalModal(null)} onSave={handleSaveGoal} />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
