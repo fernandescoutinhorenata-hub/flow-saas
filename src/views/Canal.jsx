@@ -12,11 +12,12 @@ function localKey(d) {
 
 export default function Canal({ addToast }) {
   const { channels, loading: channelsLoading, createChannel, updateChannel, deleteChannel } = useChannels()
-  const { videos, createVideo } = useVideos()
+  const { videos, createVideo, deleteVideo } = useVideos()
 
   const [showNewChannel, setShowNewChannel] = useState(false)
   const [newChannelName, setNewChannelName] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmDeleteVideo, setConfirmDeleteVideo] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [nameDraft, setNameDraft] = useState('')
 
@@ -90,6 +91,17 @@ export default function Canal({ addToast }) {
     }
   }
 
+  async function handleDeleteVideo() {
+    if (!confirmDeleteVideo) return
+    try {
+      await deleteVideo(confirmDeleteVideo.id)
+      addToast('✅ Vídeo excluído.')
+      setConfirmDeleteVideo(null)
+    } catch {
+      addToast('❌ Erro ao excluir vídeo.')
+    }
+  }
+
   if (channelsLoading) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontFamily: "'DM Sans', sans-serif" }}>
@@ -155,6 +167,7 @@ export default function Canal({ addToast }) {
                       <tr style={{ borderBottom: '1px solid var(--border)' }}>
                         <th style={{ padding: '10px 20px', fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Vídeo</th>
                         <th style={{ padding: '10px 20px', fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'right' }}>Data de publicação</th>
+                        <th style={{ padding: '10px 12px', width: 40 }}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -162,6 +175,9 @@ export default function Canal({ addToast }) {
                         <tr key={v.id} style={{ borderBottom: '1px solid var(--border)' }}>
                           <td style={{ padding: '12px 20px', fontSize: 14, color: 'var(--text-primary)' }}>{v.title}</td>
                           <td style={{ padding: '12px 20px', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatDate(v.publish_date)}</td>
+                          <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                            <button onClick={() => setConfirmDeleteVideo(v)} title="Excluir vídeo" style={{ background: 'none', border: 'none', color: '#FF4C4C', cursor: 'pointer', fontSize: 14, padding: '4px' }}>🗑️</button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -225,6 +241,21 @@ export default function Canal({ addToast }) {
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 8, padding: 11, cursor: 'pointer', fontSize: 13 }}>Cancelar</button>
               <button onClick={handleDeleteChannel} style={{ flex: 1, background: '#FF4C4C', color: '#F0F0F0', border: 'none', borderRadius: 8, padding: 11, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal excluir vídeo */}
+      {confirmDeleteVideo && (
+        <div onClick={e => { if (e.target === e.currentTarget) setConfirmDeleteVideo(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="anim-scaleIn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, width: 400, maxWidth: '100%', padding: 28, textAlign: 'center' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>Excluir vídeo?</h3>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>O vídeo <strong>{confirmDeleteVideo.title}</strong> será removido da programação.</p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setConfirmDeleteVideo(null)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 8, padding: 11, cursor: 'pointer', fontSize: 13 }}>Cancelar</button>
+              <button onClick={handleDeleteVideo} style={{ flex: 1, background: '#FF4C4C', color: '#F0F0F0', border: 'none', borderRadius: 8, padding: 11, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Excluir</button>
             </div>
           </div>
         </div>
