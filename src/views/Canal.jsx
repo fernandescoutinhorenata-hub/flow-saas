@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Avatar from '../components/Avatar.jsx'
 import CanalAgenda from './CanalAgenda.jsx'
+import CanalResultados from './CanalResultados.jsx'
 import { useVideos, VIDEO_STAGES } from '../hooks/useVideos.js'
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../data.js'
 import { formatDate, isOverdue } from '../utils.js'
@@ -248,7 +249,7 @@ export default function Canal({ users, addToast }) {
             Canal
           </h2>
           <div style={{ display: 'flex', gap: 4, background: 'var(--bg-surface)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
-            {[{ key: 'pipeline', label: 'Pipeline' }, { key: 'agenda', label: 'Agenda' }].map(t => (
+            {[{ key: 'pipeline', label: 'Pipeline' }, { key: 'agenda', label: 'Agenda' }, { key: 'resultados', label: 'Resultados' }].map(t => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
@@ -315,6 +316,10 @@ export default function Canal({ users, addToast }) {
 
       {tab === 'agenda' && (
         <CanalAgenda videos={videos} users={users} onVideoClick={v => setEditing(v)} />
+      )}
+
+      {tab === 'resultados' && (
+        <CanalResultados addToast={addToast} />
       )}
 
       {showNew && (
