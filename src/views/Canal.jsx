@@ -31,7 +31,9 @@ export default function Canal({ addToast }) {
   const tomorrow = localKey(tomorrowDate)
 
   const scheduled = (videos || []).filter(v => v.publish_date)
-  const dueTomorrow = scheduled.filter(v => v.publish_date === tomorrow && v.status !== 'publicado')
+  const upcoming = scheduled.filter(v => v.publish_date >= today && v.status !== 'publicado')
+  const lastUpcoming = upcoming.length ? [...upcoming].sort((a, b) => b.publish_date.localeCompare(a.publish_date))[0] : null
+  const needProduce = upcoming.length <= 1
 
   async function handleCreateChannel() {
     if (!newChannelName.trim()) return
@@ -108,11 +110,13 @@ export default function Canal({ addToast }) {
       </div>
 
       {/* Alerta produzir conteúdo */}
-      {dueTomorrow.length > 0 && (
+      {needProduce && (
         <div style={{ background: '#FFB80015', border: '1px solid #FFB800', borderRadius: 12, padding: 16, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#FFB800', marginBottom: 6 }}>⚠️ Precisa produzir conteúdo!</div>
           <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>
-            {dueTomorrow.map(v => v.title).join(', ')} — publica amanhã.
+            {upcoming.length === 0
+              ? 'Nenhum vídeo programado.'
+              : `Falta apenas 1 vídeo programado — "${lastUpcoming.title}" publica ${lastUpcoming.publish_date === tomorrow ? 'amanhã' : formatDate(lastUpcoming.publish_date)}.`}
           </div>
         </div>
       )}
