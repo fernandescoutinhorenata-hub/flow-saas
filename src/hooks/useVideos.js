@@ -3,27 +3,23 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { logActivity } from '../lib/logActivity'
 
-export const VIDEO_STAGES = [
-  { id: 'ideia', label: 'IDEIA' },
-  { id: 'pauta', label: 'PAUTA' },
-  { id: 'roteiro', label: 'ROTEIRO' },
-  { id: 'gravacao', label: 'GRAVAÇÃO' },
-  { id: 'edicao', label: 'EDIÇÃO' },
-  { id: 'revisao', label: 'REVISÃO' },
-  { id: 'publicado', label: 'PUBLICADO' },
-]
-
-export function useVideos() {
+export function useVideos(channelId = null) {
   const { currentUser } = useAuth()
   const [videos, setVideos] = useState([])
   const [loading, setLoading] = useState(true)
 
   const fetchVideos = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('videos')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (channelId) {
+        query = query.eq('channel_id', channelId)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         console.error('Erro videos:', error)
@@ -35,7 +31,7 @@ export function useVideos() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [channelId])
 
   useEffect(() => {
     fetchVideos()
@@ -46,12 +42,12 @@ export function useVideos() {
   async function createVideo(video) {
     const { data, error } = await supabase
       .from('videos')
-      .insert([video])
+      .insert([{ ...video, channel_id: channelId || video.channel_id || null }])
       .select()
       .single()
 
     if (!error) {
-      logActivity({ userName: currentUser?.name, action: `criou o vídeo "${video.title}"` })
+      logActivity({ userName: currentUser?.name, action: `programou o vídeo "${video.title}"` })
     }
 
     await fetchVideos()
@@ -74,14 +70,5 @@ export function useVideos() {
     if (error) throw error
   }
 
-  async function moveVideo(id, status) {
-    const { error } = await supabase
-      .from('videos')
-      .update({ status, updated_at: new Date() })
-      .eq('id', id)
-    await fetchVideos()
-    if (error) throw error
-  }
-
-  return { videos, loading, createVideo, updateVideo, deleteVideo, moveVideo }
+  return { videos, loading, createVideo, updateVideo, deleteVideo }
 }
