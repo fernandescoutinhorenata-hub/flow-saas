@@ -42,7 +42,7 @@ create table if not exists public.contents (
   tags text,
   idea text,
   hook text,
-  references text,
+  refs text,
   source_links text,
   research_notes text,
   audience text,
@@ -88,6 +88,7 @@ alter table public.tasks add column if not exists recurrence text not null defau
 alter table public.tasks add column if not exists task_type text not null default 'tarefa';
 alter table public.tasks add column if not exists tags text;
 alter table public.tasks add column if not exists checklist jsonb default '[]'::jsonb;
+alter table public.tasks add column if not exists channel_id uuid references public.channels(id) on delete set null;
 alter table public.tasks add column if not exists content_id uuid references public.contents(id) on delete set null;
 
 -- -----------------------------------------------------------
