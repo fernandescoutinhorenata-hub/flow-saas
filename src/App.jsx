@@ -1,19 +1,14 @@
 import React, { useState, useRef, Suspense } from 'react';
 import Login from './components/Login.jsx';
 import Sidebar from './components/Sidebar.jsx';
-import Column from './components/Column.jsx';
 import TaskModal from './components/TaskModal.jsx';
-import NewTaskModal from './components/NewTaskModal.jsx';
 import TweaksPanel from './components/TweaksPanel.jsx';
 import Toast from './components/Toast.jsx';
 import Avatar from './components/Avatar.jsx';
-import { isOverdue } from './utils.js';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
-import NewColumnButton from './components/NewColumnGhost.jsx';
 import RoleSelector from './components/RoleSelector.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import { useTasks } from './hooks/useTasks.js';
-import { useColumns } from './hooks/useColumns.js';
 import { useRegistros } from './hooks/useRegistros.js';
 import { useProjects } from './hooks/useProjects.js';
 import { useUsers } from './hooks/useUsers.js';
@@ -26,6 +21,7 @@ const Reports = React.lazy(() => import('./views/Reports.jsx'));
 const Producao = React.lazy(() => import('./views/Producao.jsx'));
 const Settings = React.lazy(() => import('./views/Settings.jsx'));
 const Archive = React.lazy(() => import('./views/Archive.jsx'));
+const PlanejamentoSemanal = React.lazy(() => import('./views/PlanejamentoSemanal.jsx'));
 
 function PageLoader() {
   return (
@@ -40,21 +36,16 @@ export default function App() {
   const { user, currentUser, loading: authLoading, signOut } = useAuth();
   const { projects, selectedProject, setSelectedProject, createProject, updateProject, deleteProject, addMember, removeMember, loading: projectsLoading } = useProjects(currentUser);
   const { users, toggleUserActive, deleteUser } = useUsers();
-  
-  const { tasks, archivedTasks, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
-  const { columns, addColumn, removeColumn, renameColumn } = useColumns();
+
+  const { archivedTasks, updateTask, deleteTask } = useTasks(selectedProject?.id);
   const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
-  
+
   const [activeModal, setActiveModal] = useState(null);
-  const [showNewTask, setShowNewTask] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
-  const [filter, setFilter] = useState("all");
-  const [dragState, setDragState] = useState({ dragId: null, overCol: null });
   const [toasts, setToasts] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("board");
-  const [confirmDeleteCol, setConfirmDeleteCol] = useState(null);
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const toastTimer = useRef({});
 
@@ -63,7 +54,6 @@ export default function App() {
     window.addEventListener('nav-change', handleNav);
     return () => window.removeEventListener('nav-change', handleNav);
   }, []);
-
 
   function addToast(message) {
     const id = Date.now();
@@ -74,92 +64,12 @@ export default function App() {
     }, 2800);
   }
 
-  function handleDragStart(e, taskId) {
-    e.dataTransfer.effectAllowed = "move";
-    setDragState(prev => ({ ...prev, dragId: taskId }));
-  }
-
-  function handleDragEnd() {
-    setDragState({ dragId: null, overCol: null });
-  }
-
-  function handleDrop(e, colId) {
-    e.preventDefault();
-    const { dragId } = dragState;
-    if (!dragId) return;
-    const task = (tasks || []).find(t => t.id === dragId);
-    if (!task || task.status === colId) return;
-    
-    moveTask(dragId, colId);
-    
-    const colName = (columns || []).find(c => c.id === colId)?.label;
-    addToast(`"${task.title.slice(0, 30)}…" movido para ${colName}`);
-    setDragState({ dragId: null, overCol: null });
-  }
-
-  function handleAddColumn(label) {
-    addColumn(label);
-    addToast(`Coluna "${label.toUpperCase()}" adicionada.`);
-  }
-
-  function handleRemoveColumn(columnId) {
-    const col = (columns || []).find(c => c.id === columnId);
-    if (!col || col.locked) return;
-
-    removeColumn(columnId);
-    setConfirmDeleteCol(null);
-    addToast(`Coluna "${col.label}" removida.`);
-  }
-
-  function handleRenameColumn(columnId, newLabel) {
-    if (currentUser?.role !== "admin") return;
-    renameColumn(columnId, newLabel);
-    addToast("Coluna renomeada.");
-  }
-
   function handleCardClick(task) { setActiveModal(task); }
 
   function handleDeleteTask(id) {
     deleteTask(id);
     setActiveModal(null);
     addToast("Tarefa excluída.");
-  }
-
-  function handleCreateTask({ title, priority, due_date, status, description }) {
-    const newTask = {
-      title,
-      priority,
-      due_date,
-      status,
-      assignee: null,
-      assignee_initials: null,
-      description: description || "",
-      position: (tasks || []).length
-    };
-    createTask(newTask);
-    setShowNewTask(false);
-    addToast(`✅ Tarefa "${title}" criada!`);
-  }
-
-  function handleAcceptTask(id) {
-    const task = (tasks || []).find(t => t.id === id);
-    if (!task) return;
-    
-    if (currentUser?.role === "membro" && task.assignee) {
-      addToast("Esta tarefa já possui um responsável.");
-      return;
-    }
-
-    const updates = {
-      assignee: currentUser?.name === "Você" ? "Você" : currentUser?.name,
-      assignee_initials: currentUser?.initials
-    };
-    
-    updateTask(id, updates);
-    if (activeModal && activeModal.id === id) {
-      setActiveModal({ ...activeModal, ...updates });
-    }
-    addToast("✅ Tarefa aceita com sucesso!");
   }
 
   function handleCreateTicket(data) {
@@ -189,17 +99,11 @@ export default function App() {
     addToast("Registro excluído.");
   }
 
-  const filteredTasks = (tasks || []).filter(t => {
-    if (filter === "mine") return t.assignee === "Você" || t.assignee_initials === currentUser?.initials;
-    if (filter === "overdue") return isOverdue(t.due_date || t.due) && t.status !== "done";
-    return true;
-  });
-
   if (authLoading) return (
-    <div style={{ 
-      display: 'flex', alignItems: 'center', 
+    <div style={{
+      display: 'flex', alignItems: 'center',
       justifyContent: 'center', height: '100vh',
-      color: 'var(--accent)', 
+      color: 'var(--accent)',
       fontFamily: "'Syne', sans-serif",
       fontSize: 24, gap: 12,
       background: "var(--bg-base)"
@@ -211,22 +115,19 @@ export default function App() {
 
   if (!user) return <Login />;
 
-  // Novo guard para garantir que o perfil carregou antes de renderizar o app
   if (user && !currentUser) {
     return (
-      <div style={{ 
-        display: 'flex', alignItems: 'center', 
-        justifyContent: 'center', height: '100vh', 
-        background: 'var(--bg-base)', color: 'var(--accent)', 
-        fontFamily: "'Syne', sans-serif", fontSize: 24, gap: 12 
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'center', height: '100vh',
+        background: 'var(--bg-base)', color: 'var(--accent)',
+        fontFamily: "'Syne', sans-serif", fontSize: 24, gap: 12
       }}>
         <span className="anim-pulse">FLOW</span>
         <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>carregando perfil...</span>
       </div>
     );
   }
-
-
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -236,7 +137,6 @@ export default function App() {
         display: "flex", alignItems: "center", padding: "0 20px",
         gap: 16, flexShrink: 0, zIndex: 100,
       }}>
-        {/* Botão hamburguer: desktop colapsa sidebar, mobile abre overlay */}
         <button
           onClick={() => isMobile ? setMobileOpen(p => !p) : setSidebarCollapsed(p => !p)}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: 16, padding: "6px", borderRadius: 6, transition: "color 0.15s, background 0.15s" }}
@@ -260,7 +160,7 @@ export default function App() {
               </div>
               <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 4 }}>▾</span>
             </button>
-            
+
             {showProjectMenu && (
               <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 8, background: 'var(--bg-modal)', border: '1px solid var(--border)', borderRadius: 12, minWidth: 200, zIndex: 2000, boxShadow: '0 10px 32px rgba(0,0,0,0.5)', padding: 6 }}>
                 {projects.length === 0 && (
@@ -269,7 +169,7 @@ export default function App() {
                 {projects.map(p => (
                   <div key={p.id} onClick={() => { setSelectedProject(p); setShowProjectMenu(false) }}
                     className="dropdown-item"
-                    style={{ 
+                    style={{
                       padding: '10px 14px', cursor: 'pointer', fontSize: 13, borderRadius: 6,
                       color: selectedProject?.id === p.id ? 'var(--accent)' : 'var(--text-primary)',
                       background: selectedProject?.id === p.id ? 'var(--accent-soft)' : 'transparent',
@@ -288,45 +188,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* Filters — ocultos no mobile via CSS */}
-        <div className="header-filters" style={{ display: "flex", gap: 2 }}>
-          {[{ key: "all", label: "Todas" }, { key: "mine", label: "Minhas" }, { key: "overdue", label: "Atrasadas" }].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              style={{
-                background: "none", border: "none", cursor: "pointer",
-                color: filter === f.key ? "var(--text-primary)" : "var(--text-secondary)",
-                fontSize: 13, padding: "6px 10px", borderRadius: 6,
-                borderBottom: filter === f.key ? "2px solid var(--accent)" : "2px solid transparent",
-                fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s",
-              }}
-            >{f.label}</button>
-          ))}
-        </div>
-
-        <button
-          onClick={() => setShowNewTask(true)}
-          style={{
-            background: "transparent", border: "1px solid var(--accent)", borderRadius: 8,
-            color: "var(--accent)", fontSize: 13, fontWeight: 500, padding: "7px 14px",
-            cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "background 0.15s",
-            display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
-          }}
-          onMouseOver={e => e.currentTarget.style.background = "var(--accent-soft)"}
-          onMouseOut={e => e.currentTarget.style.background = "transparent"}
-        >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
-          <span className="header-new-task-label">Nova Tarefa</span>
-        </button>
-
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Avatar initials={currentUser?.initials || '?'} avatarUrl={currentUser?.avatar_url} size={32} roleBadge={currentUser?.role} />
-          <button 
+          <button
             onClick={signOut}
             title="Sair"
-            style={{ 
-              background: "none", border: "none", color: "var(--text-secondary)", 
+            style={{
+              background: "none", border: "none", color: "var(--text-secondary)",
               cursor: "pointer", fontSize: 18, padding: "4px", borderRadius: 6,
               transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center"
             }}
@@ -353,152 +221,98 @@ export default function App() {
         />
 
         <Suspense fallback={<PageLoader />}>
-        {activeNav === "board" && (
-          <main className="kanban-board" style={{
-            flex: 1, overflowX: "auto", overflowY: "hidden",
-            padding: "20px 24px",
-            display: "flex", gap: 16, alignItems: "flex-start",
-          }}>
-            {(columns || []).map(col => (
-              <Column
-                key={col.id}
-                col={col}
-                tasks={filteredTasks.filter(t => t.status === col.id)}
-                onCardClick={handleCardClick}
-                dragState={dragState}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDrop={handleDrop}
-                onDragOver={colId => setDragState(prev => ({ ...prev, overCol: colId }))}
-                onAccept={handleAcceptTask}
-                isAdmin={currentUser?.role === "admin"}
-                onRename={handleRenameColumn}
-                onRemove={(id) => {
-                  const col = columns.find(c => c.id === id);
-                  const count = tasks.filter(t => t.status === id).length;
-                  setConfirmDeleteCol({ id, label: col.label, taskCount: count });
-                }}
+          {activeNav === "board" && (
+            <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <ErrorBoundary>
+                <PlanejamentoSemanal selectedProject={selectedProject} addToast={addToast} />
+              </ErrorBoundary>
+            </main>
+          )}
+
+          {activeNav === "registros" && (
+            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <Registros
+                tickets={tickets}
+                onUpdateStatus={handleUpdateTicketStatus}
+                onCreate={handleCreateTicket}
+                onRespond={handleRespondTicket}
+                onDelete={handleDeleteTicket}
+                currentUser={currentUser}
               />
-            ))}
-            
-            {currentUser?.role === "admin" && (
-              <NewColumnButton onAdd={handleAddColumn} />
-            )}
-          </main>
-        )}
+            </main>
+          )}
 
-        {activeNav === "registros" && (
-          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Registros
-              tickets={tickets}
-              onUpdateStatus={handleUpdateTicketStatus}
-              onCreate={handleCreateTicket}
-              onRespond={handleRespondTicket}
-              onDelete={handleDeleteTicket}
-              currentUser={currentUser}
-            />
-          </main>
-        )}
-        
-        {activeNav === "home" && (
-          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Dashboard tasks={tasks} onTaskClick={handleCardClick} />
-          </main>
-        )}
+          {activeNav === "home" && (
+            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <Dashboard onTaskClick={handleCardClick} />
+            </main>
+          )}
 
-        {activeNav === "canal" && (
-          <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <ErrorBoundary>
-              <Canal users={users} addToast={addToast} />
-            </ErrorBoundary>
-          </main>
-        )}
+          {activeNav === "canal" && (
+            <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <ErrorBoundary>
+                <Canal users={users} addToast={addToast} />
+              </ErrorBoundary>
+            </main>
+          )}
 
-        {activeNav === "producao" && (
-          <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <ErrorBoundary>
-              <Producao selectedProject={selectedProject} addToast={addToast} />
-            </ErrorBoundary>
-          </main>
-        )}
+          {activeNav === "producao" && (
+            <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <ErrorBoundary>
+                <Producao addToast={addToast} />
+              </ErrorBoundary>
+            </main>
+          )}
 
-        {activeNav === "timeline" && (
-          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Timeline users={users} />
-          </main>
-        )}
+          {activeNav === "timeline" && (
+            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <Timeline users={users} />
+            </main>
+          )}
 
-        {activeNav === "reports" && (
-          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Reports tasks={tasks} />
-          </main>
-        )}
+          {activeNav === "reports" && (
+            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <Reports />
+            </main>
+          )}
 
-        {activeNav === "settings" && (
-          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <ErrorBoundary>
-              <Settings 
-                currentUser={currentUser} 
-                addToast={addToast}
-                projects={projects}
-                projectsLoading={projectsLoading}
-                createProject={createProject}
-                updateProject={updateProject}
-                deleteProject={deleteProject}
-                addMember={addMember}
-                removeMember={removeMember}
-                users={users}
-                toggleUserActive={toggleUserActive}
-                deleteUser={deleteUser}
-              />
-            </ErrorBoundary>
-          </main>
-        )}
+          {activeNav === "settings" && (
+            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <ErrorBoundary>
+                <Settings
+                  currentUser={currentUser}
+                  addToast={addToast}
+                  projects={projects}
+                  projectsLoading={projectsLoading}
+                  createProject={createProject}
+                  updateProject={updateProject}
+                  deleteProject={deleteProject}
+                  addMember={addMember}
+                  removeMember={removeMember}
+                  users={users}
+                  toggleUserActive={toggleUserActive}
+                  deleteUser={deleteUser}
+                />
+              </ErrorBoundary>
+            </main>
+          )}
 
-        {activeNav === "archive" && (
-          <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <Archive tasks={archivedTasks} users={users} />
-          </main>
-        )}
+          {activeNav === "archive" && (
+            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <Archive tasks={archivedTasks} users={users} />
+            </main>
+          )}
         </Suspense>
       </div>
 
-      {/* Confirmation Modal for Column Removal */}
-      {confirmDeleteCol && (
-        <div className="anim-fadeIn" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div className="anim-scaleIn" style={{ background: "var(--bg-modal)", width: "100%", maxWidth: 400, borderRadius: 16, border: "1px solid var(--border)", padding: 32, textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🗑️</div>
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>Remover coluna?</h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 32, lineHeight: 1.5 }}>
-              {confirmDeleteCol.taskCount === 0 
-                ? `A coluna "${confirmDeleteCol.label}" será removida.`
-                : `A coluna "${confirmDeleteCol.label}" tem ${confirmDeleteCol.taskCount} tarefa(s). Elas serão movidas para o Backlog.`
-              }
-            </p>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button onClick={() => setConfirmDeleteCol(null)} style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-secondary)", padding: "12px", fontWeight: 500, cursor: "pointer" }}>Cancelar</button>
-              <button onClick={() => handleRemoveColumn(confirmDeleteCol.id)} style={{ flex: 1, background: "var(--status-urgent)", color: "#F0F0F0", border: "none", borderRadius: 8, padding: "12px", fontWeight: 600, cursor: "pointer" }}>Confirmar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modals */}
+      {/* Modal de tarefa (aberto via Dashboard) */}
       {activeModal && (
         <TaskModal
           task={activeModal}
-          columns={columns}
           onClose={() => setActiveModal(null)}
           onUpdate={updateTask}
           onDelete={handleDeleteTask}
           addToast={addToast}
-        />
-      )}
-      {showNewTask && (
-        <NewTaskModal
-          onClose={() => setShowNewTask(false)}
-          onCreate={handleCreateTask}
-          columns={columns}
         />
       )}
 
