@@ -20,6 +20,7 @@ import { useUsers } from './hooks/useUsers.js';
 
 const Registros = React.lazy(() => import('./views/Registros.jsx'));
 const Dashboard = React.lazy(() => import('./views/Dashboard.jsx'));
+const Canal = React.lazy(() => import('./views/Canal.jsx'));
 const Timeline = React.lazy(() => import('./views/Timeline.jsx'));
 const Reports = React.lazy(() => import('./views/Reports.jsx'));
 const Producao = React.lazy(() => import('./views/Producao.jsx'));
@@ -38,7 +39,7 @@ function PageLoader() {
 export default function App() {
   const { user, currentUser, loading: authLoading, signOut } = useAuth();
   const { projects, selectedProject, setSelectedProject, createProject, updateProject, deleteProject, addMember, removeMember, loading: projectsLoading } = useProjects(currentUser);
-  const { users, toggleUserActive } = useUsers();
+  const { users, toggleUserActive, deleteUser } = useUsers();
   
   const { tasks, archivedTasks, createTask, updateTask, deleteTask, moveTask } = useTasks(selectedProject?.id);
   const { columns, addColumn, removeColumn, renameColumn } = useColumns();
@@ -405,6 +406,14 @@ export default function App() {
           </main>
         )}
 
+        {activeNav === "canal" && (
+          <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <ErrorBoundary>
+              <Canal users={users} addToast={addToast} />
+            </ErrorBoundary>
+          </main>
+        )}
+
         {activeNav === "producao" && (
           <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <ErrorBoundary>
@@ -440,6 +449,7 @@ export default function App() {
                 removeMember={removeMember}
                 users={users}
                 toggleUserActive={toggleUserActive}
+                deleteUser={deleteUser}
               />
             </ErrorBoundary>
           </main>

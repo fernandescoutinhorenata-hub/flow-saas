@@ -9,7 +9,8 @@ import {
   ClipboardList, 
   BarChart3, 
   Settings as SettingsIcon,
-  Archive
+  Archive,
+  Clapperboard
 } from 'lucide-react';
 
 export default function Sidebar({ collapsed, activeNav, setActiveNav, mobileOpen, setMobileOpen }) {
@@ -27,6 +28,7 @@ export default function Sidebar({ collapsed, activeNav, setActiveNav, mobileOpen
   const items = [
     { view: "home",      icon: <LayoutDashboard size={18} />, label: "Dashboard" },
     { view: "board",     icon: <Kanban size={18} />,          label: "Quadro" },
+    { view: "canal",     icon: <Clapperboard size={18} />,    label: "Canal" },
     { view: "producao",  icon: <Package size={18} />,         label: "Produção" },
     { view: "timeline",  icon: <Clock size={18} />,           label: "Timeline" },
     { view: "registros", icon: <ClipboardList size={18} />,   label: "Registros" },

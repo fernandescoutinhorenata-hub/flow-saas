@@ -14,7 +14,8 @@ export default function Settings({
   addMember, 
   removeMember,
   users,
-  toggleUserActive
+  toggleUserActive,
+  deleteUser
 }) {
   const { currentUser, inviteMember, hasPermission, setProfile, setUser } = useAuth();
   
@@ -40,6 +41,7 @@ export default function Settings({
   const [isCreating, setIsCreating] = useState(false);
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
 
   async function handleInvite(e) {
     e.preventDefault();
@@ -95,6 +97,17 @@ export default function Settings({
       addToast("❌ Erro ao excluir projeto.");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleDeleteUser() {
+    if (!confirmDeleteUser) return;
+    try {
+      await deleteUser(confirmDeleteUser.id);
+      addToast("✅ Membro excluído com sucesso.");
+      setConfirmDeleteUser(null);
+    } catch {
+      addToast("❌ Erro ao excluir membro.");
     }
   }
 
@@ -454,6 +467,15 @@ export default function Settings({
                         checked={u.active} 
                         onChange={val => toggleUserActive(u.id, val)} 
                       />
+                      {u.id !== currentUser?.id && u.role !== 'dono' && (
+                        <button 
+                          onClick={() => setConfirmDeleteUser(u)}
+                          title="Excluir membro"
+                          style={{ background:'none', border:'none', color:'#FF4C4C', cursor:'pointer', fontSize:15, padding:'4px 6px', borderRadius:6, transition:'all 0.15s', display:'flex', alignItems:'center' }}
+                          onMouseOver={e => { e.currentTarget.style.background = '#FF4C4C20'; }}
+                          onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}
+                        >🗑️</button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -607,6 +629,33 @@ export default function Settings({
                 style={{ width: "100%", padding: 12, background: "transparent", color: "var(--text-secondary)", border: "none", borderRadius: 8, fontWeight: 500, cursor: "pointer" }}
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal — Excluir Membro */}
+      {confirmDeleteUser && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
+          <div className="anim-scaleIn" style={{ background: "var(--bg-card)", padding: 32, borderRadius: 16, border: "1px solid var(--border)", width: 400, textAlign: "center" }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+            <h3 style={{ fontSize: 20, color: "var(--text-primary)", marginBottom: 12, fontWeight: 700 }}>Excluir membro?</h3>
+            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 32, lineHeight: 1.5 }}>
+              Essa ação é permanente e removerá <strong>{confirmDeleteUser.name}</strong> ({confirmDeleteUser.email}) da equipe.
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button 
+                onClick={() => setConfirmDeleteUser(null)}
+                style={{ flex: 1, padding: 12, background: "transparent", color: "var(--text-secondary)", border: "1px solid var(--border)", borderRadius: 8, fontWeight: 500, cursor: "pointer" }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDeleteUser}
+                style={{ flex: 1, padding: 12, background: "#FF4C4C", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}
+              >
+                Excluir
               </button>
             </div>
           </div>

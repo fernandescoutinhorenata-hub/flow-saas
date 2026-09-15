@@ -35,5 +35,14 @@ export function useUsers() {
     await fetchUsers()
   }
 
-  return { users, loading, toggleUserActive }
+  async function deleteUser(id) {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id)
+    if (error) throw error
+    await fetchUsers()
+  }
+
+  return { users, loading, toggleUserActive, deleteUser }
 }
