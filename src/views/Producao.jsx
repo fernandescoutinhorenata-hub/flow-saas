@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Avatar from '../components/Avatar.jsx'
+import BancoIdeias from './BancoIdeias.jsx'
 import { useContents, CONTENT_STAGES, PLATFORMS, FORMATS, DEFAULT_CHECKLIST } from '../hooks/useContents.js'
 import { useChannels } from '../hooks/useChannels.js'
 import { useUsers } from '../hooks/useUsers.js'
@@ -269,6 +270,7 @@ export default function Producao({ addToast }) {
   const [channelFilter, setChannelFilter] = useState('all')
   const [platformFilter, setPlatformFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [tab, setTab] = useState('esteira')
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -346,10 +348,21 @@ export default function Producao({ addToast }) {
       {/* Cabeçalho + capacidade */}
       <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Produção</h2>
-          <button onClick={() => { setEditing(null); setShowModal(true) }} style={{ background: 'var(--accent)', color: '#0D0D0D', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}>+ Novo conteúdo</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Produção</h2>
+            <div style={{ display: 'flex', gap: 4, background: 'var(--bg-surface)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+              {[{ key: 'esteira', label: 'Esteira' }, { key: 'ideias', label: 'Banco de Ideias' }].map(t => (
+                <button key={t.key} onClick={() => setTab(t.key)} style={{ background: tab === t.key ? 'var(--bg-card)' : 'transparent', border: tab === t.key ? '1px solid var(--border)' : '1px solid transparent', color: tab === t.key ? 'var(--text-primary)' : 'var(--text-secondary)', padding: '6px 14px', borderRadius: 6, fontSize: 13, cursor: 'pointer', fontWeight: tab === t.key ? 600 : 400, transition: 'all 0.15s', fontFamily: "'DM Sans', sans-serif" }}>{t.label}</button>
+              ))}
+            </div>
+          </div>
+          {tab === 'esteira' && (
+            <button onClick={() => { setEditing(null); setShowModal(true) }} style={{ background: 'var(--accent)', color: '#0D0D0D', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}>+ Novo conteúdo</button>
+          )}
         </div>
 
+        {tab === 'esteira' && (
+          <>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[
             { label: 'Em produção', val: counts.total, color: 'var(--text-primary)' },
@@ -379,9 +392,11 @@ export default function Producao({ addToast }) {
             {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
+          </>
+        )}
       </div>
 
-      {/* Esteira (kanban) */}
+      {tab === 'esteira' && (
       <div style={{ display: 'flex', gap: 10, padding: 16, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
         {CONTENT_STAGES.map(stage => {
           const stageContents = filtered.filter(c => c.stage === stage.id)
@@ -439,6 +454,11 @@ export default function Producao({ addToast }) {
           )
         })}
       </div>
+      )}
+
+      {tab === 'ideias' && (
+        <BancoIdeias addToast={addToast} />
+      )}
 
       {showModal && (
         <ContentFormModal content={editing} channels={channels} users={users} onClose={() => { setShowModal(false); setEditing(null) }} onSave={handleSave} onDelete={(c) => { setConfirmDelete(c); setShowModal(false) }} />
