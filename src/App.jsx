@@ -12,6 +12,8 @@ import { useTasks } from './hooks/useTasks.js';
 import { useRegistros } from './hooks/useRegistros.js';
 import { useProjects } from './hooks/useProjects.js';
 import { useUsers } from './hooks/useUsers.js';
+import { usePWAInstall } from './hooks/usePWAInstall.js';
+import { applyUpdate } from './lib/pwa.js';
 
 const Registros = React.lazy(() => import('./views/Registros.jsx'));
 const Dashboard = React.lazy(() => import('./views/Dashboard.jsx'));
@@ -39,6 +41,7 @@ export default function App() {
 
   const { archivedTasks, updateTask, deleteTask } = useTasks(selectedProject?.id);
   const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
+  const pwa = usePWAInstall();
 
   const [activeModal, setActiveModal] = useState(null);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
@@ -324,6 +327,14 @@ export default function App() {
 
       {/* Toasts */}
       <Toast toasts={toasts} />
+
+      {/* Atualização do PWA */}
+      {pwa.updateAvailable && (
+        <div className="anim-fadeIn" style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 10000, background: 'var(--bg-card)', border: '1px solid var(--accent)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>Uma nova versão do FLOW está disponível.</span>
+          <button onClick={applyUpdate} style={{ background: 'var(--accent)', color: '#0D0D0D', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Atualizar</button>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Avatar from '../components/Avatar.jsx';
 import Toggle from '../components/Toggle.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { usePWAInstall } from '../hooks/usePWAInstall.js';
+import { installPWA } from '../lib/pwa.js';
 import { supabase } from '../lib/supabase'
 
 export default function Settings({ 
@@ -18,6 +20,19 @@ export default function Settings({
   deleteUser
 }) {
   const { currentUser, inviteMember, hasPermission, setProfile, setUser } = useAuth();
+  const pwa = usePWAInstall();
+  const [installing, setInstalling] = useState(false);
+  const [showManualHint, setShowManualHint] = useState(false);
+
+  async function handleInstall() {
+    setInstalling(true)
+    try {
+      const prompted = await installPWA()
+      if (!prompted) setShowManualHint(true)
+    } finally {
+      setInstalling(false)
+    }
+  }
   
   const [activeTab, setActiveTab] = useState("perfil");
   const [notifs, setNotifs] = useState({ n1: true, n2: true, n3: false, n4: true });
@@ -169,6 +184,7 @@ export default function Settings({
     { id: "membros", label: "Equipe", ownerOnly: true },
     { id: "notificacoes", label: "Notificações" },
     { id: "aparencia", label: "Aparência" },
+    { id: "aplicativo", label: "Aplicativo" },
   ]).filter(t => {
     if (t.ownerOnly) return currentUser?.role === 'dono';
     if (t.perm) return hasPermission(t.perm);
@@ -529,6 +545,38 @@ export default function Settings({
                     <button key={i} onClick={() => setDensity(d)} style={{ flex: 1, padding: "10px", background: density === d ? "var(--accent-soft)" : "var(--bg-card)", border: density === d ? "1px solid var(--accent)" : "1px solid var(--border)", borderRadius: 8, color: density === d ? "var(--accent)" : "var(--text-secondary)", cursor: "pointer", fontSize: 13, transition: "all 0.2s" }}>{d}</button>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "aplicativo" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }} className="anim-fadeInUp">
+              <h3 style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600 }}>Aplicativo</h3>
+              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, padding: 24 }}>
+                {pwa.isInstalled ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 20 }}>✅</span>
+                    <div>
+                      <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500 }}>FLOW já está instalado</div>
+                      <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>Abra o FLOW pela área de trabalho ou barra de tarefas.</div>
+                    </div>
+                  </div>
+                ) : pwa.canInstall ? (
+                  <div>
+                    <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500, marginBottom: 8 }}>Instale o FLOW no seu computador</div>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>Crie um atalho na área de trabalho e use o FLOW como um aplicativo, em janela própria.</div>
+                    <button onClick={handleInstall} disabled={installing} style={{ background: "var(--accent)", color: "#0D0D0D", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: installing ? "default" : "pointer", opacity: installing ? 0.6 : 1, fontFamily: "'DM Sans', sans-serif" }}>
+                      {installing ? "Instalando..." : "Instalar FLOW no computador"}
+                    </button>
+                    {showManualHint && (
+                      <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 12, lineHeight: 1.5 }}>Abra o menu do navegador e selecione a opção para instalar este site como aplicativo.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                    A instalação não está disponível neste navegador. Abra o menu do navegador e selecione a opção para instalar este site como aplicativo.
+                  </div>
+                )}
               </div>
             </div>
           )}
