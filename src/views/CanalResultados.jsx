@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useVideos } from '../hooks/useVideos.js'
 import { useVideoMetrics } from '../hooks/useVideoMetrics.js'
+import { supabase } from '../lib/supabase.js'
 
 function fmt(n) {
   return (Number(n) || 0).toLocaleString('pt-BR')
@@ -151,8 +152,9 @@ function MetricsFormModal({ videos, onClose, onSubmit }) {
 
 export default function CanalResultados({ addToast }) {
   const { videos } = useVideos()
-  const { metrics, loading, upsertMetric, deleteMetric } = useVideoMetrics()
+  const { metrics, loading, upsertMetric, deleteMetric, refetch } = useVideoMetrics()
   const [showModal, setShowModal] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   const latestByVideo = {}
   metrics.forEach(m => {
@@ -198,6 +200,24 @@ export default function CanalResultados({ addToast }) {
     }
   }
 
+  async function handleSyncYoutube() {
+    setSyncing(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-youtube')
+      if (error) throw error
+      if (data?.success) {
+        addToast(`✅ Sincronizado(s) ${data.synced ?? 0} vídeo(s) do YouTube.`)
+        await refetch()
+      } else {
+        addToast(`❌ ${data?.error || 'Erro ao sincronizar YouTube.'}`)
+      }
+    } catch {
+      addToast('❌ Erro ao sincronizar com o YouTube.')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const kpiCards = [
     { label: 'Views totais', value: fmt(kpis.views), color: 'var(--text-primary)' },
     { label: 'Curtidas', value: fmt(kpis.likes), color: 'var(--status-ok)' },
@@ -209,12 +229,22 @@ export default function CanalResultados({ addToast }) {
     <div style={{ flex: 1, overflow: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Resultados</h3>
-        <button
-          onClick={() => setShowModal(true)}
-          style={{ background: 'var(--accent)', color: '#0D0D0D', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}
-        >
-          + Registrar Métricas
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={handleSyncYoutube}
+            disabled={syncing}
+            title="Puxar views/curtidas/comentários do YouTube automaticamente"
+            style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: syncing ? 'default' : 'pointer', fontFamily: "'DM Sans', sans-serif", opacity: syncing ? 0.6 : 1 }}
+          >
+            {syncing ? 'Sincronizando...' : '↻ Sincronizar YouTube'}
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{ background: 'var(--accent)', color: '#0D0D0D', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}
+          >
+            + Registrar Métricas
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}

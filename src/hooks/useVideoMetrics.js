@@ -45,5 +45,5 @@ export function useVideoMetrics() {
     await fetchMetrics()
   }
 
-  return { metrics, loading, upsertMetric, deleteMetric }
+  return { metrics, loading, upsertMetric, deleteMetric, refetch: fetchMetrics }
 }
