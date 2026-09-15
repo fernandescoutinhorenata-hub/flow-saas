@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Avatar from '../components/Avatar.jsx'
+import CanalAgenda from './CanalAgenda.jsx'
 import { useVideos, VIDEO_STAGES } from '../hooks/useVideos.js'
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../data.js'
 import { formatDate, isOverdue } from '../utils.js'
@@ -197,6 +198,7 @@ export default function Canal({ users, addToast }) {
   const [showNew, setShowNew] = useState(false)
   const [editing, setEditing] = useState(null)
   const [dragId, setDragId] = useState(null)
+  const [tab, setTab] = useState('pipeline')
 
   function handleDragStart(e, id) {
     e.dataTransfer.effectAllowed = 'move'
@@ -240,10 +242,28 @@ export default function Canal({ users, addToast }) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-base)', minWidth: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-          Canal
-        </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--border)', flexShrink: 0, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            Canal
+          </h2>
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-surface)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+            {[{ key: 'pipeline', label: 'Pipeline' }, { key: 'agenda', label: 'Agenda' }].map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  background: tab === t.key ? 'var(--bg-card)' : 'transparent',
+                  border: tab === t.key ? '1px solid var(--border)' : '1px solid transparent',
+                  color: tab === t.key ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  padding: '6px 14px', borderRadius: 6, fontSize: 13, cursor: 'pointer',
+                  fontWeight: tab === t.key ? 600 : 400, transition: 'all 0.15s',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >{t.label}</button>
+            ))}
+          </div>
+        </div>
         <button
           onClick={() => setShowNew(true)}
           style={{ background: 'var(--accent)', color: '#0D0D0D', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}
@@ -252,6 +272,7 @@ export default function Canal({ users, addToast }) {
         </button>
       </div>
 
+      {tab === 'pipeline' && (
       <div className="kanban-board" style={{ display: 'flex', gap: 16, padding: 20, overflowX: 'auto', flex: 1, alignItems: 'flex-start' }}>
         {VIDEO_STAGES.map(stage => {
           const stageVideos = (videos || []).filter(v => v.status === stage.id)
@@ -290,6 +311,11 @@ export default function Canal({ users, addToast }) {
           )
         })}
       </div>
+      )}
+
+      {tab === 'agenda' && (
+        <CanalAgenda videos={videos} users={users} onVideoClick={v => setEditing(v)} />
+      )}
 
       {showNew && (
         <VideoFormModal users={users} onClose={() => setShowNew(false)} onSave={handleSaveVideo} />
