@@ -491,8 +491,14 @@ export default function PlanejamentoSemanal({ selectedProject, addToast }) {
             </div>
           ) : selectedTasks.map(t => (
             <div key={t.id} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${pColor(t.priority)}`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div onClick={() => toggleDone(t)} style={{ width: 20, height: 20, borderRadius: 6, border: t.done ? '1.5px solid var(--accent)' : '1.5px solid var(--border)', background: t.done ? 'var(--accent-soft)' : 'transparent', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {t.done && <span style={{ color: 'var(--accent)', fontSize: 12 }}>✓</span>}
+              <div
+                onClick={() => toggleDone(t)}
+                role="checkbox"
+                aria-checked={t.done}
+                aria-label="Marcar como concluída"
+                style={{ width: 24, height: 24, borderRadius: 7, flexShrink: 0, cursor: 'pointer', border: t.done ? '2px solid var(--accent)' : '2px solid var(--text-disabled)', background: t.done ? 'var(--accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+              >
+                {t.done && <span style={{ color: '#0D0D0D', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>✓</span>}
               </div>
               <div onClick={() => { setEditingTask(t); setShowTaskModal(true) }} style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, color: 'var(--text-primary)', textDecoration: t.done ? 'line-through' : 'none', opacity: t.done ? 0.6 : 1 }}>{t.title}</div>
@@ -678,8 +684,15 @@ function TaskCard({ task, isDragging, onDragStart, onDragEnd, onToggle, onClick,
       onDragEnd={onDragEnd}
       style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `3px solid ${pColor(task.priority)}`, borderRadius: 8, padding: '8px 10px', cursor: 'pointer', opacity: isDragging ? 0.35 : 1, display: 'flex', alignItems: 'center', gap: 8 }}
     >
-      <div onClick={onToggle} style={{ width: 15, height: 15, borderRadius: 4, border: task.done ? '1.5px solid var(--accent)' : '1.5px solid var(--border)', background: task.done ? 'var(--accent-soft)' : 'transparent', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {task.done && <span style={{ color: 'var(--accent)', fontSize: 10 }}>✓</span>}
+      <div
+        onClick={onToggle}
+        role="checkbox"
+        aria-checked={task.done}
+        aria-label="Marcar como concluída"
+        title={task.done ? 'Reabrir tarefa' : 'Marcar como concluída'}
+        style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, cursor: 'pointer', border: task.done ? '2px solid var(--accent)' : '2px solid var(--text-disabled)', background: task.done ? 'var(--accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+      >
+        {task.done && <span style={{ color: '#0D0D0D', fontSize: 13, fontWeight: 700, lineHeight: 1 }}>✓</span>}
       </div>
       <div onClick={onClick} style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, color: 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none', opacity: task.done ? 0.6 : 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
