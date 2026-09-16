@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   LayoutDashboard, Kanban, Package, Clapperboard, MoreHorizontal,
-  Clock, ClipboardList, BarChart3, Archive, Settings as SettingsIcon, LogOut, Download,
+  Clock, BarChart3, Archive, Settings as SettingsIcon, LogOut, Download,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { usePWAInstall } from '../hooks/usePWAInstall.js'
@@ -16,7 +16,6 @@ const MAIN_ITEMS = [
 
 const MORE_ITEMS = [
   { view: 'timeline', label: 'Timeline', Icon: Clock },
-  { view: 'registros', label: 'Registros', Icon: ClipboardList },
   { view: 'reports', label: 'Relatórios', Icon: BarChart3 },
   { view: 'archive', label: 'Arquivo', Icon: Archive },
   { view: 'settings', label: 'Configurações', Icon: SettingsIcon },

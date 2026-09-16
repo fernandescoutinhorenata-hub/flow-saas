@@ -10,13 +10,11 @@ import RoleSelector from './components/RoleSelector.jsx';
 import MobileNav from './components/MobileNav.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import { useTasks } from './hooks/useTasks.js';
-import { useRegistros } from './hooks/useRegistros.js';
 import { useProjects } from './hooks/useProjects.js';
 import { useUsers } from './hooks/useUsers.js';
 import { usePWAInstall } from './hooks/usePWAInstall.js';
 import { applyUpdate } from './lib/pwa.js';
 
-const Registros = React.lazy(() => import('./views/Registros.jsx'));
 const Dashboard = React.lazy(() => import('./views/Dashboard.jsx'));
 const Canal = React.lazy(() => import('./views/Canal.jsx'));
 const Timeline = React.lazy(() => import('./views/Timeline.jsx'));
@@ -41,7 +39,6 @@ export default function App() {
   const { users, toggleUserActive, deleteUser } = useUsers();
 
   const { archivedTasks, updateTask, deleteTask } = useTasks(selectedProject?.id);
-  const { tickets, createTicket, respondTicket, updateTicketStatus, deleteTicket } = useRegistros();
   const pwa = usePWAInstall();
 
   const [activeModal, setActiveModal] = useState(null);
@@ -74,33 +71,6 @@ export default function App() {
     deleteTask(id);
     setActiveModal(null);
     addToast("Tarefa excluída.");
-  }
-
-  function handleCreateTicket(data) {
-    const newTicket = {
-      ...data,
-      author_id: currentUser?.id,
-      author_initials: currentUser?.initials,
-      author: currentUser?.name,
-      status: "aberto",
-    };
-    createTicket(newTicket);
-    addToast("Novo registro aberto com sucesso.");
-  }
-
-  function handleRespondTicket(ticketId, text) {
-    respondTicket(ticketId, text);
-    addToast("Resposta enviada.");
-  }
-
-  function handleUpdateTicketStatus(ticketId, status) {
-    updateTicketStatus(ticketId, status);
-    addToast("Status do registro atualizado.");
-  }
-
-  function handleDeleteTicket(id) {
-    deleteTicket(id);
-    addToast("Registro excluído.");
   }
 
   if (authLoading) return (
@@ -230,19 +200,6 @@ export default function App() {
               <ErrorBoundary>
                 <PlanejamentoSemanal selectedProject={selectedProject} addToast={addToast} />
               </ErrorBoundary>
-            </main>
-          )}
-
-          {activeNav === "registros" && (
-            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-              <Registros
-                tickets={tickets}
-                onUpdateStatus={handleUpdateTicketStatus}
-                onCreate={handleCreateTicket}
-                onRespond={handleRespondTicket}
-                onDelete={handleDeleteTicket}
-                currentUser={currentUser}
-              />
             </main>
           )}
 
